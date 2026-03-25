@@ -1,0 +1,6 @@
+-mlongcalls
+-fno-builtin-memcpy
+-fno-builtin-memset
+-fno-builtin-bzero
+"-specs=/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_1/build/specs/picolibc.specs"
+-fno-rtti
