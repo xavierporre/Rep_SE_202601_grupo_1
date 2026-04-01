@@ -1,7 +1,7 @@
 {
     "version":            "1.3",
     "project_name":       "sobel_filter",
-    "project_version":    "23b0b4b-dirty",
+    "project_version":    "96dd228-dirty",
     "project_path":       "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32",
     "idf_path":           "/Users/xavierporre/esp/idf/esp-idf",
     "build_dir":          "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build",
