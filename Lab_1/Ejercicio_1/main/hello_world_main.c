@@ -15,7 +15,7 @@
 
 void app_main(void)
 {
-    printf("Hello, Xavier Porre, Martin Feres, Vicente Abalos!\n");
+    printf("Hello, Xavier Porre, Matías Feres, Vicente Abalos!\n");
 
     /* Print chip information */
     esp_chip_info_t chip_info;
