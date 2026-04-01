@@ -1,0 +1,8 @@
+Command: ninja all
+[1/4] cd /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build && /Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/bin/python /Users/xavierporre/esp/idf/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build/partition_table/partition-table.bin /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build/sobel_filter.bin
+sobel_filter.bin binary size 0x25a90 bytes. Smallest app partition is 0x100000 bytes. 0xda570 bytes (85%) free.
+[2/4] Performing build step for 'bootloader'
+[1/1] cd /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build/bootloader && /Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/bin/python /Users/xavierporre/esp/idf/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x0 /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build/bootloader/bootloader.bin
+Bootloader binary size 0x5240 bytes. 0x2dc0 bytes (36%) free.
+[3/4] No install step for 'bootloader'
+[4/4] Completed 'bootloader'

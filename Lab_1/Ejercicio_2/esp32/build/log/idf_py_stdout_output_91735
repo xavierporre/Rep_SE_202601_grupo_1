@@ -1,0 +1,23 @@
+Command: ninja flash
+[1/5] cd /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build && /Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/bin/python /Users/xavierporre/esp/idf/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build/partition_table/partition-table.bin /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build/sobel_filter.bin
+sobel_filter.bin binary size 0x25a90 bytes. Smallest app partition is 0x100000 bytes. 0xda570 bytes (85%) free.
+[2/5] Performing build step for 'bootloader'
+[1/1] cd /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build/bootloader && /Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/bin/python /Users/xavierporre/esp/idf/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x0 /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build/bootloader/bootloader.bin
+Bootloader binary size 0x5240 bytes. 0x2dc0 bytes (36%) free.
+[3/5] No install step for 'bootloader'
+[4/5] Completed 'bootloader'
+[4/5] Running utility command for flash
+esptool --chip esp32s3 -p /dev/cu.usbmodem5A461063111 -b 115200 --before=default-reset --after=hard-reset write-flash --flash-mode dio --flash-freq 80m --flash-size 2MB 0x0 bootloader/bootloader.bin 0x8000 partition_table/partition-table.bin 0x10000 sobel_filter.bin
+esptool v5.2.0
+Serial port /dev/cu.usbmodem5A461063111:
+Connecting....
+[1A[2K[1A[2KConnected to ESP32-S3 on /dev/cu.usbmodem5A461063111:
+Chip type:          ESP32-S3 (QFN56) (revision v0.2)
+Features:           Wi-Fi, BT 5 (LE), Dual Core + LP Core, 240MHz, Embedded PSRAM 8MB (AP_3v3)
+Crystal frequency:  40MHz
+MAC:                fc:01:2c:c5:3a:7c
+
+Uploading stub flasher...
+[31mFAILED: [code=1] [0mCMakeFiles/flash.util 
+cd /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32 && /opt/homebrew/bin/cmake -D IDF_PATH=/Users/xavierporre/esp/idf/esp-idf -D "SERIAL_TOOL=/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/bin/python;-m;esptool;--chip;esp32s3" -D "SERIAL_TOOL_ARGS=--before=default-reset;--after=hard-reset;write-flash;@flash_args" -D WORKING_DIRECTORY=/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_2/esp32/build -P /Users/xavierporre/esp/idf/esp-idf/components/esptool_py/run_serial_tool.cmake
+ninja: build stopped: subcommand failed.

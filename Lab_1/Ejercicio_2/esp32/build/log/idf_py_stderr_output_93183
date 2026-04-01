@@ -1,0 +1,10 @@
+Command: ninja flash
+[1;31m
+A fatal error occurred: Failed to write to target RAM (result was 0107: Checksum error)[0m
+[31mCMake Error at /Users/xavierporre/esp/idf/esp-idf/components/esptool_py/run_serial_tool.cmake:67 (message):
+  
+  /Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/bin/python;-m;esptool;--chip;esp32s3
+  failed.
+
+
+[0m
