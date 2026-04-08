@@ -2,7 +2,8 @@
 #include "esp_timer.h"
 #include "xtensa/core-macros.h"
 #include "esp_cpu.h"
-#include "esp_clk.h"
+#include "esp_system.h"
+#include "freertos/FreeRTOS.h"
 
 void app_main(void)
 {
@@ -25,9 +26,9 @@ void app_main(void)
   cycles_end = esp_cpu_get_cycle_count();
   int instruction_count = 5 * X;
   int alternative_instruction_count = 26 * X;
-  float cpi = (float)elapsed_cycles / instruction_count;
   int64_t elapsed_time = end_time - start_time;
   uint32_t elapsed_cycles = cycles_end - cycles_start;
-  uint32_t frequency = esp_clk_cpu_freq();
+  float cpi = (float)elapsed_cycles / instruction_count;
+  uint32_t frequency = configCPU_CLOCK_HZ;
   uint32_t time_using_cycles = elapsed_cycles / frequency;
 }

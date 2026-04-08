@@ -1,4 +1,4 @@
-Command: cmake -G Ninja -B /home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build -DPYTHON_DEPS_CHECKED=1 -DPYTHON=/home/vicente_abalos/esp/idf-tools/python_env/idf6.1_py3.12_env/bin/python -DESP_PLATFORM=1 -DIDF_TARGET=esp32s3 -DCCACHE_ENABLE=False /home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio
+Command: cmake -G Ninja -B /home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build -DPYTHON_DEPS_CHECKED=1 -DPYTHON=/home/vicente_abalos/esp/idf-tools/python_env/idf6.1_py3.12_env/bin/python -DESP_PLATFORM=1 -DIDF_TARGET=esp32s2 -DCCACHE_ENABLE=False /home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio
 Configuration Report               
  ───────────────────────────────── 
    Parser Version: 1               
