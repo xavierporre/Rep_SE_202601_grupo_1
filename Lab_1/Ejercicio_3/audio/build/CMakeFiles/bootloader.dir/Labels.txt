@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/audio/build/CMakeFiles/bootloader
+/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/audio/build/CMakeFiles/bootloader.rule
+/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/audio/build/CMakeFiles/bootloader-complete.rule
+/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/audio/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/audio/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/audio/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/audio/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/audio/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/audio/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/audio/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule

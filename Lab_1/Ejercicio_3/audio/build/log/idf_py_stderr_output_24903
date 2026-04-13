@@ -1,0 +1,62 @@
+Command: ninja flash
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/esptool/__main__.py", line 9, in <module>
+    esptool._main()
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/esptool/__init__.py", line 1187, in _main
+    main()
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/esptool/__init__.py", line 1081, in main
+    cli(args=args, esp=esp)
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/esptool/cli_util.py", line 345, in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/rich_click/rich_command.py", line 402, in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/click/core.py", line 1485, in __call__
+    return self.main(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/rich_click/rich_command.py", line 216, in main
+    rv = self.invoke(ctx)
+         ^^^^^^^^^^^^^^^^
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/click/core.py", line 1873, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/click/core.py", line 1269, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/click/core.py", line 824, in invoke
+    return callback(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/click/decorators.py", line 34, in new_func
+    return f(get_current_context(), *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/esptool/__init__.py", line 736, in write_flash_cli
+    prepare_esp_object(ctx)
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/esptool/__init__.py", line 473, in prepare_esp_object
+    esp = esp or get_default_connected_device(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/esptool/__init__.py", line 1172, in get_default_connected_device
+    _esp.connect(before, connect_attempts)
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/esptool/loader.py", line 790, in connect
+    last_error = self._connect_attempt(reset_strategy, mode)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/esptool/loader.py", line 683, in _connect_attempt
+    self.flush_input()
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/esptool/loader.py", line 595, in flush_input
+    self._port.flushInput()
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/serial/serialutil.py", line 588, in flushInput
+    self.reset_input_buffer()
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/serial/serialposix.py", line 683, in reset_input_buffer
+    self._reset_input_buffer()
+  File "/Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/lib/python3.12/site-packages/serial/serialposix.py", line 677, in _reset_input_buffer
+    termios.tcflush(self.fd, termios.TCIFLUSH)
+termios.error: (6, 'Device not configured')
+[31mCMake Error at /Users/xavierporre/esp/idf/esp-idf/components/esptool_py/run_serial_tool.cmake:67 (message):
+  
+  /Users/xavierporre/esp/idf-tools/python_env/idf6.1_py3.12_env/bin/python;-m;esptool;--chip;esp32s3
+  failed.
+
+
+[0m
