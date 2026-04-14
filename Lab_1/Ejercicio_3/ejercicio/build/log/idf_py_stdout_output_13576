@@ -1,0 +1,37 @@
+Command: ninja all
+[1/9] Performing build step for 'bootloader'
+[1/1] cd /home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader && /home/ap6d2/esp/idf-tools/python_env/idf6.1_py3.12_env/bin/python /home/ap6d2/esp/idf/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x0 /home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader/bootloader.bin
+Bootloader binary size 0x5240 bytes. 0x2dc0 bytes (36%) free.
+[2/9] No install step for 'bootloader'
+[3/9] Building C object esp-idf/main/CMakeFiles/__idf_main.dir/ejercicio.c.obj
+/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/main/ejercicio.c: In function 'app_main':
+/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/main/ejercicio.c:23:9: warning: unused variable 'result_4' [-Wunused-variable]
+   23 |     int result_4 = var_1/var_2;
+      |         ^~~~~~~~
+/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/main/ejercicio.c:22:9: warning: unused variable 'result_3' [-Wunused-variable]
+   22 |     int result_3 = var_1*var_2;
+      |         ^~~~~~~~
+/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/main/ejercicio.c:21:9: warning: unused variable 'result_2' [-Wunused-variable]
+   21 |     int result_2 = var_1%var_2;
+      |         ^~~~~~~~
+/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/main/ejercicio.c:20:9: warning: unused variable 'result_1' [-Wunused-variable]
+   20 |     int result_1 = var_1 + 10;
+      |         ^~~~~~~~
+/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/main/ejercicio.c:19:9: warning: unused variable 'result_0' [-Wunused-variable]
+   19 |     int result_0 = var_1 + var_2;
+      |         ^~~~~~~~
+/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/main/ejercicio.c:33:12: warning: unused variable 'time_using_cycles' [-Wunused-variable]
+   33 |   uint32_t time_using_cycles = elapsed_cycles / frequency;
+      |            ^~~~~~~~~~~~~~~~~
+[4/9] Completed 'bootloader'
+[5/9] Linking C static library esp-idf/main/libmain.a
+[6/9] Generating esp-idf/esp_system/ld/sections.ld
+[7/9] Linking CXX executable ejercicio.elf
+[8/9] Generating binary image from built executable
+esptool v5.2.0
+Creating ESP32-S3 image...
+Merged 3 ELF sections.
+Successfully created ESP32-S3 image.
+Generated /home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/ejercicio.bin
+[9/9] cd /home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build && /home/ap6d2/esp/idf-tools/python_env/idf6.1_py3.12_env/bin/python /home/ap6d2/esp/idf/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/partition_table/partition-table.bin /home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/ejercicio.bin
+ejercicio.bin binary size 0x281f0 bytes. Smallest app partition is 0x100000 bytes. 0xd7e10 bytes (84%) free.

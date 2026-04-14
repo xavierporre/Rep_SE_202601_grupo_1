@@ -2,34 +2,34 @@
 	"sources" : 
 	[
 		{
-			"file" : "/home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/CMakeFiles/bootloader"
+			"file" : "/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/CMakeFiles/bootloader"
 		},
 		{
-			"file" : "/home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/CMakeFiles/bootloader.rule"
+			"file" : "/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/CMakeFiles/bootloader.rule"
 		},
 		{
-			"file" : "/home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/CMakeFiles/bootloader-complete.rule"
+			"file" : "/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/CMakeFiles/bootloader-complete.rule"
 		},
 		{
-			"file" : "/home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
+			"file" : "/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
 		},
 		{
-			"file" : "/home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
+			"file" : "/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
 		},
 		{
-			"file" : "/home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
+			"file" : "/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
 		},
 		{
-			"file" : "/home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
+			"file" : "/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
 		},
 		{
-			"file" : "/home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
+			"file" : "/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
 		},
 		{
-			"file" : "/home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
+			"file" : "/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
 		},
 		{
-			"file" : "/home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
+			"file" : "/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
 		}
 	],
 	"target" : 

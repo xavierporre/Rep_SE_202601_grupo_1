@@ -1,4 +1,4 @@
-"-specs=/home/vicente_abalos/embutidos/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader/specs/picolibc.specs"
+"-specs=/home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/ejercicio/build/bootloader/specs/picolibc.specs"
 -mlongcalls
 -fno-builtin-memcpy
 -fno-builtin-memset
