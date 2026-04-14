@@ -59,7 +59,7 @@ source ~/.zprofile && source ~/.zshrc
 source ~/.zprofile && source ~/.zshrc && get_esp32
 cd <ruta_del_proyecto>
 idf.py set-target esp32s3
-idf.py build && idf.py flash -p /dev/cu.usbmodem101 monitor
+idf.py build && idf.py flash monitor
 ```
 
 Para salir del monitor serial: `Ctrl + ]`
