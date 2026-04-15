@@ -1,5 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 #include "esp_camera.h"
 #include "esp_log.h"
 #include "esp_system.h"
@@ -51,8 +56,36 @@ void histogram_equalization(uint8_t *img, int size) {
     }
 }
 
+static void capture_and_output(void)
+{
+    camera_fb_t *pic = esp_camera_fb_get();
+    if (!pic) {
+        ESP_LOGE(TAG, "Error capturando imagen");
+        return;
+    }
+
+    ESP_LOGI(TAG, "Imagen capturada, tamaño: %d bytes", pic->len);
+
+    // 🔥 EJERCICIO 8: ecualización
+    histogram_equalization(pic->buf, pic->len);
+
+    // 🔥 SALIDA PARA TXT / COLAB
+    printf("DATA_START\n");
+    for (int i = 0; i < pic->len; i++) {
+        printf("0x%02X,", pic->buf[i]);
+    }
+    printf("\nDATA_END\n");
+    fflush(stdout);
+
+    esp_camera_fb_return(pic);
+}
+
 void app_main(void)
 {
+    // Evita buffering para que los mensajes salgan inmediatamente por serie
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stdin, NULL, _IONBF, 0);
+
     camera_config_t config = {
         .pin_pwdn = CAM_PIN_PWDN,
         .pin_reset = CAM_PIN_RESET,
@@ -96,8 +129,27 @@ void app_main(void)
     }
 
     ESP_LOGI(TAG, "Cámara iniciada");
+    printf("Listo. Pulsa 's' + Enter para sacar una foto (o 'q' + Enter para salir).\n");
 
-    // Capturar imagen
+    while (1) {
+        int ch = getchar();
+
+        if (ch == 's' || ch == 'S') {
+            capture_and_output();
+            printf("OK. Pulsa 's' + Enter para otra foto.\n");
+        } else if (ch == 'q' || ch == 'Q') {
+            printf("Saliendo...\n");
+            break;
+        } else {
+            // Ignorar '\n'/'\r' y cualquier otro carácter
+        }
+
+        // Pequeño yield para no monopolizar CPU
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+
+#if 0
+    // Capturar imagen (legacy)
     camera_fb_t *pic = esp_camera_fb_get();
     if (!pic) {
         ESP_LOGE(TAG, "Error capturando imagen");
@@ -120,6 +172,7 @@ void app_main(void)
 
     // Liberar buffer
     esp_camera_fb_return(pic);
+#endif
 
     ESP_LOGI(TAG, "Proceso terminado");
 }

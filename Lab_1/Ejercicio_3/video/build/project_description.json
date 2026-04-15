@@ -1,7 +1,7 @@
 {
     "version":            "1.3",
     "project_name":       "video",
-    "project_version":    "ac5f9bc-dirty",
+    "project_version":    "ca67bb6-dirty",
     "project_path":       "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/video",
     "idf_path":           "/Users/xavierporre/esp/idf/esp-idf",
     "build_dir":          "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/video/build",
