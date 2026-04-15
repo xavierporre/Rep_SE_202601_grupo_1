@@ -21,13 +21,8 @@ function App() {
           <p>
             Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
           </p>
+          <Menu />
         </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
       </section>
 
       <div className="ticks"></div>
@@ -35,9 +30,6 @@ function App() {
       <section id="next-steps">
         <div id="docs">
           <h2>Documentation</h2>
-        </div>
-        <div id="social">
-          <h2>Connect with us</h2>
         </div>
       </section>
     </>
