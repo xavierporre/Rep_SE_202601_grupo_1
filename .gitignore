@@ -53,3 +53,10 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Logs
+*.log
+log/
+logs/
+**/log/
+**/logs/
