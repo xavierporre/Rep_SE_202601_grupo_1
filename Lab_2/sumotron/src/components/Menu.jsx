@@ -17,6 +17,8 @@ export function Menu() {
           case 'd':
             handleRight(event);
             break;
+          default:
+            break;
         }
       };
       window.addEventListener('keydown', handleKeyDown);
