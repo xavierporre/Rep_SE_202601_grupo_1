@@ -62,6 +62,17 @@ void right(int reverse) {
   handleRoot();
 }
 
+void stop() {
+  output1State = "off";
+  digitalWrite(output1, LOW);
+  digitalWrite(output2, LOW);
+  digitalWrite(output4, LOW);
+  digitalWrite(output5, LOW);
+  digitalWrite(output6, LOW);
+  digitalWrite(output7, LOW);
+  handleRoot();
+}
+
 void handleRoot() {
   String html = "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
   html += "<link rel=\"icon\" href=\"data:,\">";
@@ -98,4 +109,28 @@ void handleRoot() {
 void setup() {
   Serial.begin(115200);
 
+  pinMode(output1, OUTPUT);
+  pinMode(output2, OUTPUT);
+  pinMode(output4, OUTPUT);
+  pinMode(output5, OUTPUT);
+  pinMode(output6, OUTPUT);
+  pinMode(output7, OUTPUT);
+  stop();
+  WiFi.softAP(ap_ssid, ap_pass);
+  Serial.println("Access Point Started:"+WiFi.softAPIP().toString());
+
+  server.on("/", handleRoot);
+  server.on("/forward", advance);
+  server.on("/stop", stop);
+  server.on("/backward", reverse);
+  server.on("/leftForward", left(0));
+  server.on("/leftBackward", left(1));
+  server.on("/rightForward", right(0));
+  server.on("/rightBackward", right(1));
+  server.begin();
+  Serial.println("HTTP server started");
+}
+
+void loop() {
+  server.handleClient();
 }
