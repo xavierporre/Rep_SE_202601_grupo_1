@@ -1,0 +1,14 @@
+## Dependencias del componente main
+dependencies:
+  idf:
+    version: ">=5.0.0"
+ 
+  ## Arduino core para ESP32 (incluye WiFi.h, WebServer.h, etc.)
+  espressif/arduino-esp32:
+    version: "^3.0.0"
+    rules:
+      - if: "idf_version >=5.0.0"
+ 
+  ## Adafruit NeoPixel portada a ESP-IDF / Arduino-ESP32
+  adafruit/adafruit_neopixel:
+    version: ">=1.12.0"
