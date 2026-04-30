@@ -2,7 +2,7 @@
  * Control de Auto RC — ESP32-S3 + L298N
  * HTML del controlador embebido — acceder en http://192.168.4.1
  *
- * LED RGB integrado (GPIO 48):
+ * LED RGB integrado WS2812 (GPIO 48) via espressif/led_strip:
  *   Adelante  → Verde
  *   Atras     → Rojo
  *   Izquierda → Azul
@@ -15,18 +15,37 @@
  *   IN2 → GPIO 6   IN4 → GPIO 16
  */
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>
-#include <Adafruit_NeoPixel.h>
+#include "led_strip.h"
 
-// ── LED ────────────────────────────────────────────────────
-#define LED_PIN   48
-#define LED_COUNT  1
-Adafruit_NeoPixel led(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+// ── LED WS2812 integrado ───────────────────────────────────
+#define LED_GPIO    48
+#define LED_RMT_CH   0    // canal RMT
+
+static led_strip_handle_t strip;
+
+void ledInit() {
+  led_strip_config_t cfg = {};
+  cfg.strip_gpio_num   = LED_GPIO;
+  cfg.max_leds         = 1;
+  cfg.led_pixel_format = LED_PIXEL_FORMAT_GRB;
+  cfg.led_model        = LED_MODEL_WS2812;
+
+  led_strip_rmt_config_t rmt = {};
+  rmt.clk_src        = RMT_CLK_SRC_DEFAULT;
+  rmt.resolution_hz  = 10 * 1000 * 1000;  // 10 MHz
+  rmt.mem_block_symbols = 64;
+  rmt.flags.with_dma = false;
+
+  ESP_ERROR_CHECK(led_strip_new_rmt_device(&cfg, &rmt, &strip));
+  led_strip_clear(strip);
+}
 
 void setLED(uint8_t r, uint8_t g, uint8_t b) {
-  led.setPixelColor(0, led.Color(r, g, b));
-  led.show();
+  led_strip_set_pixel(strip, 0, r, g, b);
+  led_strip_refresh(strip);
 }
 
 // ── Pines L298N ────────────────────────────────────────────
@@ -99,13 +118,13 @@ const char INDEX_HTML[] PROGMEM = R"rawhtml(
   </div>
   <div class="dpad">
     <div class="de"></div>
-    <button class="db" id="btn-fwd"  data-cmd="forward">&#9650;</button>
+    <button class="db" id="btn-fwd"   data-cmd="forward">&#9650;</button>
     <div class="de"></div>
-    <button class="db" id="btn-left" data-cmd="left">&#9664;</button>
+    <button class="db" id="btn-left"  data-cmd="left">&#9664;</button>
     <button class="ds" onclick="forceStop()">STOP</button>
-    <button class="db" id="btn-right"data-cmd="right">&#9654;</button>
+    <button class="db" id="btn-right" data-cmd="right">&#9654;</button>
     <div class="de"></div>
-    <button class="db" id="btn-back" data-cmd="backward">&#9660;</button>
+    <button class="db" id="btn-back"  data-cmd="backward">&#9660;</button>
     <div class="de"></div>
   </div>
   <div class="spd">
@@ -120,7 +139,6 @@ const char INDEX_HTML[] PROGMEM = R"rawhtml(
 </div>
 <script>
 let spd=70,holdIv=null;
-
 function addLog(msg,t='info'){
   const log=document.getElementById('log');
   const d=document.createElement('div');
@@ -130,71 +148,41 @@ function addLog(msg,t='info'){
   if(log.children.length>60)log.removeChild(log.firstChild);
   log.scrollTop=log.scrollHeight;
 }
-
 function updateSpd(v){
   spd=parseInt(v);
   document.getElementById('sl2').textContent=spd+'%';
   document.getElementById('ss').textContent=spd+'%';
 }
-
 async function sendCmd(cmd){
   try{
     await fetch('/'+cmd+'?speed='+spd,{method:'GET',cache:'no-store'});
     addLog('-> '+cmd.toUpperCase()+' spd='+spd+'%','ok');
     document.getElementById('ds2').textContent=cmd==='stop'?'STOP':cmd.toUpperCase();
     const cs=document.getElementById('cs');
-    cs.textContent='ONLINE'; cs.className='sv on';
+    cs.textContent='ONLINE';cs.className='sv on';
   }catch(e){
     addLog('ERR '+cmd+': '+e.message,'err');
     const cs=document.getElementById('cs');
-    cs.textContent='ERROR'; cs.className='sv off';
+    cs.textContent='ERROR';cs.className='sv off';
   }
 }
-
 function forceStop(){
-  clearInterval(holdIv); holdIv=null;
+  clearInterval(holdIv);holdIv=null;
   document.querySelectorAll('.db').forEach(b=>b.classList.remove('pressed'));
   sendCmd('stop');
 }
-
 document.querySelectorAll('.db[data-cmd]').forEach(btn=>{
   const cmd=btn.dataset.cmd;
-  const start=e=>{
-    e.preventDefault();
-    if(btn.classList.contains('pressed'))return;
-    btn.classList.add('pressed');
-    sendCmd(cmd);
-    holdIv=setInterval(()=>sendCmd(cmd),250);
-  };
-  const stop=e=>{
-    e.preventDefault();
-    btn.classList.remove('pressed');
-    clearInterval(holdIv); holdIv=null;
-    sendCmd('stop');
-  };
-  btn.addEventListener('mousedown',start);
-  btn.addEventListener('touchstart',start,{passive:false});
-  btn.addEventListener('mouseup',stop);
-  btn.addEventListener('mouseleave',stop);
-  btn.addEventListener('touchend',stop);
-  btn.addEventListener('touchcancel',stop);
+  const start=e=>{e.preventDefault();if(btn.classList.contains('pressed'))return;btn.classList.add('pressed');sendCmd(cmd);holdIv=setInterval(()=>sendCmd(cmd),250);};
+  const stop=e=>{e.preventDefault();btn.classList.remove('pressed');clearInterval(holdIv);holdIv=null;sendCmd('stop');};
+  btn.addEventListener('mousedown',start);btn.addEventListener('touchstart',start,{passive:false});
+  btn.addEventListener('mouseup',stop);btn.addEventListener('mouseleave',stop);
+  btn.addEventListener('touchend',stop);btn.addEventListener('touchcancel',stop);
 });
-
 const km={ArrowUp:'btn-fwd',ArrowDown:'btn-back',ArrowLeft:'btn-left',ArrowRight:'btn-right',w:'btn-fwd',s:'btn-back',a:'btn-left',d:'btn-right'};
 const held=new Set();
-document.addEventListener('keydown',e=>{
-  if(held.has(e.key))return;
-  const id=km[e.key]||km[e.key.toLowerCase()];
-  if(!id)return;
-  e.preventDefault(); held.add(e.key);
-  document.getElementById(id)?.dispatchEvent(new MouseEvent('mousedown'));
-});
-document.addEventListener('keyup',e=>{
-  held.delete(e.key);
-  const id=km[e.key]||km[e.key.toLowerCase()];
-  if(id) document.getElementById(id)?.dispatchEvent(new MouseEvent('mouseup'));
-});
-
+document.addEventListener('keydown',e=>{if(held.has(e.key))return;const id=km[e.key]||km[e.key.toLowerCase()];if(!id)return;e.preventDefault();held.add(e.key);document.getElementById(id)?.dispatchEvent(new MouseEvent('mousedown'));});
+document.addEventListener('keyup',e=>{held.delete(e.key);const id=km[e.key]||km[e.key.toLowerCase()];if(id)document.getElementById(id)?.dispatchEvent(new MouseEvent('mouseup'));});
 addLog('Conectado al ESP32-S3. Usa los botones o WASD.','info');
 </script>
 </body>
@@ -213,91 +201,52 @@ int getSpd() {
     : 70;
 }
 
-// ── Helpers motor ──────────────────────────────────────────
-// void setPWM(int s){ int v=map(s,0,100,0,255); ledcWrite(PWM_CH_A,v); ledcWrite(PWM_CH_B,v); }
-// void motorStop()        { ledcWrite(PWM_CH_A,0);ledcWrite(PWM_CH_B,0);digitalWrite(IN1,LOW);digitalWrite(IN2,LOW);digitalWrite(IN3,LOW);digitalWrite(IN4,LOW); }
-// void moveForward(int s) { digitalWrite(IN1,HIGH);digitalWrite(IN2,LOW); digitalWrite(IN3,HIGH);digitalWrite(IN4,LOW);  setPWM(s); }
-// void moveBackward(int s){ digitalWrite(IN1,LOW); digitalWrite(IN2,HIGH);digitalWrite(IN3,LOW); digitalWrite(IN4,HIGH); setPWM(s); }
-// void turnLeft(int s)    { digitalWrite(IN1,LOW); digitalWrite(IN2,HIGH);digitalWrite(IN3,HIGH);digitalWrite(IN4,LOW);  setPWM(s); }
-// void turnRight(int s)   { digitalWrite(IN1,HIGH);digitalWrite(IN2,LOW); digitalWrite(IN3,LOW); digitalWrite(IN4,HIGH); setPWM(s); }
+// ── Helpers motor (descomentar con L298N) ──────────────────
+// void setPWM(int s){int v=map(s,0,100,0,255);ledcWrite(PWM_CH_A,v);ledcWrite(PWM_CH_B,v);}
+// void motorStop()        {ledcWrite(PWM_CH_A,0);ledcWrite(PWM_CH_B,0);digitalWrite(IN1,LOW);digitalWrite(IN2,LOW);digitalWrite(IN3,LOW);digitalWrite(IN4,LOW);}
+// void moveForward(int s) {digitalWrite(IN1,HIGH);digitalWrite(IN2,LOW);digitalWrite(IN3,HIGH);digitalWrite(IN4,LOW); setPWM(s);}
+// void moveBackward(int s){digitalWrite(IN1,LOW);digitalWrite(IN2,HIGH);digitalWrite(IN3,LOW);digitalWrite(IN4,HIGH);setPWM(s);}
+// void turnLeft(int s)    {digitalWrite(IN1,LOW);digitalWrite(IN2,HIGH);digitalWrite(IN3,HIGH);digitalWrite(IN4,LOW); setPWM(s);}
+// void turnRight(int s)   {digitalWrite(IN1,HIGH);digitalWrite(IN2,LOW);digitalWrite(IN3,LOW);digitalWrite(IN4,HIGH);setPWM(s);}
 
 // ── Handlers ───────────────────────────────────────────────
-void hRoot() {
-  server.send_P(200, "text/html", INDEX_HTML);
-}
-
-void hForward() {
-  int s = getSpd();
-  setLED(0, 180, 0);
-  // moveForward(s);
-  cors(); server.send(200, "text/plain", "forward:" + String(s));
-  Serial.println("ADELANTE  spd=" + String(s));
-}
-
-void hBackward() {
-  int s = getSpd();
-  setLED(180, 0, 0);
-  // moveBackward(s);
-  cors(); server.send(200, "text/plain", "backward:" + String(s));
-  Serial.println("ATRAS     spd=" + String(s));
-}
-
-void hLeft() {
-  int s = getSpd();
-  setLED(0, 0, 180);
-  // turnLeft(s);
-  cors(); server.send(200, "text/plain", "left:" + String(s));
-  Serial.println("IZQUIERDA spd=" + String(s));
-}
-
-void hRight() {
-  int s = getSpd();
-  setLED(180, 180, 0);
-  // turnRight(s);
-  cors(); server.send(200, "text/plain", "right:" + String(s));
-  Serial.println("DERECHA   spd=" + String(s));
-}
-
-void hStop() {
-  setLED(0, 0, 0);
-  // motorStop();
-  cors(); server.send(200, "text/plain", "stop");
-  Serial.println("STOP");
-}
+void hRoot()     { server.send_P(200, "text/html", INDEX_HTML); }
+void hForward()  { int s=getSpd(); setLED(0,180,0);   cors(); server.send(200,"text/plain","forward:" +String(s)); Serial.println("ADELANTE  spd="+String(s)); }
+void hBackward() { int s=getSpd(); setLED(180,0,0);   cors(); server.send(200,"text/plain","backward:"+String(s)); Serial.println("ATRAS     spd="+String(s)); }
+void hLeft()     { int s=getSpd(); setLED(0,0,180);   cors(); server.send(200,"text/plain","left:"    +String(s)); Serial.println("IZQUIERDA spd="+String(s)); }
+void hRight()    { int s=getSpd(); setLED(180,180,0); cors(); server.send(200,"text/plain","right:"   +String(s)); Serial.println("DERECHA   spd="+String(s)); }
+void hStop()     { setLED(0,0,0); cors(); server.send(200,"text/plain","stop"); Serial.println("STOP"); }
+void hOptions()  { cors(); server.send(204); }
 
 void hPing() {
-  setLED(80, 0, 80); delay(120);
-  setLED(0,  0,  0); delay(80);
-  setLED(80, 0, 80); delay(120);
-  setLED(0,  0,  0);
-  cors(); server.send(200, "text/plain", "pong");
+  setLED(80,0,80); delay(120);
+  setLED(0,0,0);   delay(80);
+  setLED(80,0,80); delay(120);
+  setLED(0,0,0);
+  cors(); server.send(200,"text/plain","pong");
   Serial.println("PING -> pong");
 }
-
-void hOptions() { cors(); server.send(204); }
 
 // ── Setup ──────────────────────────────────────────────────
 void setup() {
   Serial.begin(115200);
   delay(500);
 
-  led.begin();
-  led.setBrightness(80);
-  setLED(0, 0, 0);
+  ledInit();
 
   // Secuencia de arranque
-  setLED(0, 180, 0); delay(200);
-  setLED(180, 0, 0); delay(200);
-  setLED(0, 0, 180); delay(200);
+  setLED(0,180,0); delay(200);
+  setLED(180,0,0); delay(200);
+  setLED(0,0,180); delay(200);
   setLED(180,180,0); delay(200);
-  setLED(0, 0, 0);   delay(100);
-  setLED(0, 0, 40);  // azul tenue = esperando
+  setLED(0,0,0);   delay(100);
+  setLED(0,0,40);  // azul tenue = esperando conexion
 
   // ── Descomentar con L298N ──────────────────────────────
-  // pinMode(IN1,OUTPUT); pinMode(IN2,OUTPUT);
-  // pinMode(IN3,OUTPUT); pinMode(IN4,OUTPUT);
-  // ledcSetup(PWM_CH_A,1000,8); ledcAttachPin(ENA,PWM_CH_A);
-  // ledcSetup(PWM_CH_B,1000,8); ledcAttachPin(ENB,PWM_CH_B);
+  // pinMode(IN1,OUTPUT);pinMode(IN2,OUTPUT);
+  // pinMode(IN3,OUTPUT);pinMode(IN4,OUTPUT);
+  // ledcSetup(PWM_CH_A,1000,8);ledcAttachPin(ENA,PWM_CH_A);
+  // ledcSetup(PWM_CH_B,1000,8);ledcAttachPin(ENB,PWM_CH_B);
   // motorStop();
 
   WiFi.mode(WIFI_AP);
@@ -310,7 +259,6 @@ void setup() {
   Serial.print  ("  URL  : http://"); Serial.println(ip);
   Serial.println("=============================\n");
 
-  // Rutas
   server.on("/",         HTTP_GET,     hRoot);
   server.on("/forward",  HTTP_GET,     hForward);
   server.on("/backward", HTTP_GET,     hBackward);
