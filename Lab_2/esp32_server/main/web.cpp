@@ -15,29 +15,44 @@
  *   IN2 → GPIO 6   IN4 → GPIO 16
  */
 
-#include <Arduino.h>
-#include <WiFi.h>
-#include <WebServer.h>
+#include <esp_log.h>
+#include <esp_http_server.h>
+#include <esp_wifi.h>
+#include <esp_netif.h>
+#include <nvs_flash.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <cstring>
+#include <cstdlib>
 #include "led_strip.h"
+
+static const char* TAG = "AutoRC";
 
 // ── LED WS2812 integrado ───────────────────────────────────
 #define LED_GPIO    48
-#define LED_RMT_CH   0    // canal RMT
+#define LED_RMT_CH   0
 
 static led_strip_handle_t strip;
 
 void ledInit() {
-  led_strip_config_t cfg = {};
-  cfg.strip_gpio_num   = LED_GPIO;
-  cfg.max_leds         = 1;
-  cfg.led_pixel_format = LED_PIXEL_FORMAT_GRB;
-  cfg.led_model        = LED_MODEL_WS2812;
+  led_strip_config_t cfg = {
+    .strip_gpio_num = LED_GPIO,
+    .max_leds = 1,
+    .led_model = LED_MODEL_WS2812,
+    .color_component_format = LED_STRIP_COLOR_COMPONENT_FMT_GRB,
+    .flags = {
+      .invert_out = false,
+    },
+  };
 
-  led_strip_rmt_config_t rmt = {};
-  rmt.clk_src        = RMT_CLK_SRC_DEFAULT;
-  rmt.resolution_hz  = 10 * 1000 * 1000;  // 10 MHz
-  rmt.mem_block_symbols = 64;
-  rmt.flags.with_dma = false;
+  led_strip_rmt_config_t rmt = {
+    .clk_src = RMT_CLK_SRC_DEFAULT,
+    .resolution_hz = 10 * 1000 * 1000,
+    .mem_block_symbols = 64,
+    .flags = {
+      .with_dma = false,
+    },
+  };
 
   ESP_ERROR_CHECK(led_strip_new_rmt_device(&cfg, &rmt, &strip));
   led_strip_clear(strip);
@@ -62,10 +77,8 @@ void setLED(uint8_t r, uint8_t g, uint8_t b) {
 const char* SSID     = "AutoRC";
 const char* PASSWORD = "12345678";
 
-WebServer server(80);
-
 // ── HTML embebido ──────────────────────────────────────────
-const char INDEX_HTML[] PROGMEM = R"rawhtml(
+const char INDEX_HTML[] = R"rawhtml(
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -190,15 +203,21 @@ addLog('Conectado al ESP32-S3. Usa los botones o WASD.','info');
 )rawhtml";
 
 // ── Helpers HTTP ───────────────────────────────────────────
-void cors() {
-  server.sendHeader("Access-Control-Allow-Origin",  "*");
-  server.sendHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+void cors(httpd_req_t *req) {
+  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin",  "*");
+  httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "GET, OPTIONS");
 }
 
-int getSpd() {
-  return server.hasArg("speed")
-    ? constrain(server.arg("speed").toInt(), 0, 100)
-    : 70;
+int getSpd(httpd_req_t *req) {
+  char buf[10] = {0};
+  if (httpd_req_get_url_query_str(req, buf, sizeof(buf) - 1) == ESP_OK) {
+    char value[5] = {0};
+    if (httpd_query_key_value(buf, "speed", value, sizeof(value) - 1) == ESP_OK) {
+      int s = atoi(value);
+      return (s < 0) ? 0 : (s > 100) ? 100 : s;
+    }
+  }
+  return 70;
 }
 
 // ── Helpers motor (descomentar con L298N) ──────────────────
@@ -210,73 +229,177 @@ int getSpd() {
 // void turnRight(int s)   {digitalWrite(IN1,HIGH);digitalWrite(IN2,LOW);digitalWrite(IN3,LOW);digitalWrite(IN4,HIGH);setPWM(s);}
 
 // ── Handlers ───────────────────────────────────────────────
-void hRoot()     { server.send_P(200, "text/html", INDEX_HTML); }
-void hForward()  { int s=getSpd(); setLED(0,180,0);   cors(); server.send(200,"text/plain","forward:" +String(s)); Serial.println("ADELANTE  spd="+String(s)); }
-void hBackward() { int s=getSpd(); setLED(180,0,0);   cors(); server.send(200,"text/plain","backward:"+String(s)); Serial.println("ATRAS     spd="+String(s)); }
-void hLeft()     { int s=getSpd(); setLED(0,0,180);   cors(); server.send(200,"text/plain","left:"    +String(s)); Serial.println("IZQUIERDA spd="+String(s)); }
-void hRight()    { int s=getSpd(); setLED(180,180,0); cors(); server.send(200,"text/plain","right:"   +String(s)); Serial.println("DERECHA   spd="+String(s)); }
-void hStop()     { setLED(0,0,0); cors(); server.send(200,"text/plain","stop"); Serial.println("STOP"); }
-void hOptions()  { cors(); server.send(204); }
-
-void hPing() {
-  setLED(80,0,80); delay(120);
-  setLED(0,0,0);   delay(80);
-  setLED(80,0,80); delay(120);
-  setLED(0,0,0);
-  cors(); server.send(200,"text/plain","pong");
-  Serial.println("PING -> pong");
+static esp_err_t hRoot(httpd_req_t *req) {
+  httpd_resp_set_type(req, "text/html");
+  httpd_resp_send(req, INDEX_HTML, strlen(INDEX_HTML));
+  return ESP_OK;
 }
 
-// ── Setup ──────────────────────────────────────────────────
-void setup() {
-  Serial.begin(115200);
-  delay(500);
+static esp_err_t hForward(httpd_req_t *req) {
+  int s = getSpd(req);
+  setLED(0, 180, 0);
+  cors(req);
+  httpd_resp_set_type(req, "text/plain");
+  char buf[50];
+  snprintf(buf, sizeof(buf), "forward:%d", s);
+  httpd_resp_send(req, buf, strlen(buf));
+  ESP_LOGI(TAG, "ADELANTE  spd=%d", s);
+  return ESP_OK;
+}
 
+static esp_err_t hBackward(httpd_req_t *req) {
+  int s = getSpd(req);
+  setLED(180, 0, 0);
+  cors(req);
+  httpd_resp_set_type(req, "text/plain");
+  char buf[50];
+  snprintf(buf, sizeof(buf), "backward:%d", s);
+  httpd_resp_send(req, buf, strlen(buf));
+  ESP_LOGI(TAG, "ATRAS     spd=%d", s);
+  return ESP_OK;
+}
+
+static esp_err_t hLeft(httpd_req_t *req) {
+  int s = getSpd(req);
+  setLED(0, 0, 180);
+  cors(req);
+  httpd_resp_set_type(req, "text/plain");
+  char buf[50];
+  snprintf(buf, sizeof(buf), "left:%d", s);
+  httpd_resp_send(req, buf, strlen(buf));
+  ESP_LOGI(TAG, "IZQUIERDA spd=%d", s);
+  return ESP_OK;
+}
+
+static esp_err_t hRight(httpd_req_t *req) {
+  int s = getSpd(req);
+  setLED(180, 180, 0);
+  cors(req);
+  httpd_resp_set_type(req, "text/plain");
+  char buf[50];
+  snprintf(buf, sizeof(buf), "right:%d", s);
+  httpd_resp_send(req, buf, strlen(buf));
+  ESP_LOGI(TAG, "DERECHA   spd=%d", s);
+  return ESP_OK;
+}
+
+static esp_err_t hStop(httpd_req_t *req) {
+  setLED(0, 0, 0);
+  cors(req);
+  httpd_resp_set_type(req, "text/plain");
+  httpd_resp_send(req, "stop", 4);
+  ESP_LOGI(TAG, "STOP");
+  return ESP_OK;
+}
+
+static esp_err_t hOptions(httpd_req_t *req) {
+  cors(req);
+  httpd_resp_send(req, NULL, 0);
+  return ESP_OK;
+}
+
+static esp_err_t hPing(httpd_req_t *req) {
+  setLED(80, 0, 80);
+  vTaskDelay(120 / portTICK_PERIOD_MS);
+  setLED(0, 0, 0);
+  vTaskDelay(80 / portTICK_PERIOD_MS);
+  setLED(80, 0, 80);
+  vTaskDelay(120 / portTICK_PERIOD_MS);
+  setLED(0, 0, 0);
+  cors(req);
+  httpd_resp_set_type(req, "text/plain");
+  httpd_resp_send(req, "pong", 4);
+  ESP_LOGI(TAG, "PING -> pong");
+  return ESP_OK;
+}
+
+// ── App ────────────────────────────────────────────────────
+extern "C" void app_main() {
+  ESP_LOGI(TAG, "Inicializando...");
+  
+  // Inicializar NVS (requerido por WiFi)
+  esp_err_t ret = nvs_flash_init();
+  if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    ESP_LOGI(TAG, "Borrando NVS...");
+    ESP_ERROR_CHECK(nvs_flash_erase());
+    ret = nvs_flash_init();
+  }
+  ESP_ERROR_CHECK(ret);
+  
   ledInit();
 
   // Secuencia de arranque
-  setLED(0,180,0); delay(200);
-  setLED(180,0,0); delay(200);
-  setLED(0,0,180); delay(200);
-  setLED(180,180,0); delay(200);
-  setLED(0,0,0);   delay(100);
-  setLED(0,0,40);  // azul tenue = esperando conexion
+  setLED(0, 180, 0);
+  vTaskDelay(200 / portTICK_PERIOD_MS);
+  setLED(180, 0, 0);
+  vTaskDelay(200 / portTICK_PERIOD_MS);
+  setLED(0, 0, 180);
+  vTaskDelay(200 / portTICK_PERIOD_MS);
+  setLED(180, 180, 0);
+  vTaskDelay(200 / portTICK_PERIOD_MS);
+  setLED(0, 0, 0);
+  vTaskDelay(100 / portTICK_PERIOD_MS);
+  setLED(0, 0, 40);
 
-  // ── Descomentar con L298N ──────────────────────────────
-  // pinMode(IN1,OUTPUT);pinMode(IN2,OUTPUT);
-  // pinMode(IN3,OUTPUT);pinMode(IN4,OUTPUT);
-  // ledcSetup(PWM_CH_A,1000,8);ledcAttachPin(ENA,PWM_CH_A);
-  // ledcSetup(PWM_CH_B,1000,8);ledcAttachPin(ENB,PWM_CH_B);
-  // motorStop();
+  // WiFi
+  esp_netif_init();
+  esp_event_loop_create_default();
+  esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
 
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(SSID, PASSWORD);
-  IPAddress ip = WiFi.softAPIP();
+  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
 
-  Serial.println("\n=============================");
-  Serial.println("  AutoRC - ESP32-S3 listo");
-  Serial.print  ("  SSID : "); Serial.println(SSID);
-  Serial.print  ("  URL  : http://"); Serial.println(ip);
-  Serial.println("=============================\n");
+  wifi_config_t wifi_cfg = {};
+  strcpy((char *)wifi_cfg.ap.ssid, SSID);
+  strcpy((char *)wifi_cfg.ap.password, PASSWORD);
+  wifi_cfg.ap.ssid_len = strlen(SSID);
+  wifi_cfg.ap.channel = 6;
+  wifi_cfg.ap.max_connection = 4;
 
-  server.on("/",         HTTP_GET,     hRoot);
-  server.on("/forward",  HTTP_GET,     hForward);
-  server.on("/backward", HTTP_GET,     hBackward);
-  server.on("/left",     HTTP_GET,     hLeft);
-  server.on("/right",    HTTP_GET,     hRight);
-  server.on("/stop",     HTTP_GET,     hStop);
-  server.on("/ping",     HTTP_GET,     hPing);
-  server.on("/forward",  HTTP_OPTIONS, hOptions);
-  server.on("/backward", HTTP_OPTIONS, hOptions);
-  server.on("/left",     HTTP_OPTIONS, hOptions);
-  server.on("/right",    HTTP_OPTIONS, hOptions);
-  server.on("/stop",     HTTP_OPTIONS, hOptions);
+  ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_cfg));
+  ESP_ERROR_CHECK(esp_wifi_start());
 
-  server.begin();
-  Serial.println("Servidor HTTP puerto 80 - listo\n");
-}
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-// ── Loop ───────────────────────────────────────────────────
-void loop() {
-  server.handleClient();
+  esp_netif_ip_info_t ip_info;
+  esp_netif_get_ip_info(ap_netif, &ip_info);
+
+  ESP_LOGI(TAG, "=============================");
+  ESP_LOGI(TAG, "  AutoRC - ESP32-S3 listo");
+  ESP_LOGI(TAG, "  SSID : %s", SSID);
+  ESP_LOGI(TAG, "  URL  : http://" IPSTR, IP2STR(&ip_info.ip));
+  ESP_LOGI(TAG, "=============================");
+
+  // HTTP Server
+  httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+  config.max_uri_handlers = 16;
+  httpd_handle_t server = NULL;
+  ESP_ERROR_CHECK(httpd_start(&server, &config));
+
+  httpd_uri_t uri_root = {.uri = "/", .method = HTTP_GET, .handler = hRoot, .user_ctx = NULL};
+  httpd_register_uri_handler(server, &uri_root);
+
+  httpd_uri_t uri_forward = {.uri = "/forward", .method = HTTP_GET, .handler = hForward, .user_ctx = NULL};
+  httpd_register_uri_handler(server, &uri_forward);
+
+  httpd_uri_t uri_backward = {.uri = "/backward", .method = HTTP_GET, .handler = hBackward, .user_ctx = NULL};
+  httpd_register_uri_handler(server, &uri_backward);
+
+  httpd_uri_t uri_left = {.uri = "/left", .method = HTTP_GET, .handler = hLeft, .user_ctx = NULL};
+  httpd_register_uri_handler(server, &uri_left);
+
+  httpd_uri_t uri_right = {.uri = "/right", .method = HTTP_GET, .handler = hRight, .user_ctx = NULL};
+  httpd_register_uri_handler(server, &uri_right);
+
+  httpd_uri_t uri_stop = {.uri = "/stop", .method = HTTP_GET, .handler = hStop, .user_ctx = NULL};
+  httpd_register_uri_handler(server, &uri_stop);
+
+  httpd_uri_t uri_ping = {.uri = "/ping", .method = HTTP_GET, .handler = hPing, .user_ctx = NULL};
+  httpd_register_uri_handler(server, &uri_ping);
+
+  httpd_uri_t uri_options = {.uri = "/*", .method = HTTP_OPTIONS, .handler = hOptions, .user_ctx = NULL};
+  httpd_register_uri_handler(server, &uri_options);
+
+  ESP_LOGI(TAG, "Servidor HTTP listo en puerto 80");
 }
