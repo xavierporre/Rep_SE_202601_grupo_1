@@ -42,9 +42,9 @@
 /* Memory alignment size for PMS */
     /* rtc timer data (s_rtc_timer_retain_mem, see esp_clk.c files). For rtc_timer_data_in_rtc_mem section. */
 /*
- * FAST_REFLASHING_PADDING
+ * APP_BUILD_MINIMIZE_BINARY_CHANGES_PADDING
  *
- * Aligns the current location (.) to CONFIG_ESPTOOLPY_FAST_REFLASHING_PADDING.
+ * Aligns the current location (.) to CONFIG_APP_BUILD_MINIMIZE_BINARY_CHANGES_PADDING.
  * If more than half of the alignment block is already consumed,
  * extra padding is applied to skip to the next boundary.
  * For example, if the current location (.) is 0x1900 and the padding is 4 KB,

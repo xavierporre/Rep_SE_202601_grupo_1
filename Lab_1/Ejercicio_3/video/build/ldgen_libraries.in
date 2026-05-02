@@ -67,6 +67,8 @@ $<TARGET_FILE:__idf_http_parser>
 $<TARGET_FILE:__idf_esp_http_server>
 $<TARGET_FILE:__idf_esp_wifi>
 $<TARGET_FILE:__idf_esp_phy>
+$<TARGET_FILE:esp_phy_librtc>
+$<TARGET_FILE:esp_phy_libphy>
 $<TARGET_FILE:__idf_esp_netif>
 $<TARGET_FILE:__idf_wpa_supplicant>
 $<TARGET_FILE:__idf_esp_coex>
@@ -143,6 +145,7 @@ $<TARGET_FILE:idf::http_parser>
 $<TARGET_FILE:idf::esp-tls>
 $<TARGET_FILE:idf::esp_driver_i2s>
 $<TARGET_FILE:idf::esp_adc>
+$<TARGET_FILE:idf::esp_blockdev_util>
 $<TARGET_FILE:idf::esp_driver_cam>
 $<TARGET_FILE:idf::esp_driver_dac>
 $<TARGET_FILE:idf::esp_driver_i2c>
