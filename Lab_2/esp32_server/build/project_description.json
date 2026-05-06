@@ -1,7 +1,7 @@
 {
     "version":            "1.3",
     "project_name":       "esp32_server",
-    "project_version":    "2324721-dirty",
+    "project_version":    "b0d1a9a-dirty",
     "project_path":       "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_2/esp32_server",
     "idf_path":           "/Users/xavierporre/esp/idf/esp-idf",
     "build_dir":          "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_2/esp32_server/build",
