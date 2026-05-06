@@ -1,4 +1,4 @@
 idf_component_register(
-    SRCS "main.cpp" "web_server.cpp"
+    SRCS "web.cpp" "benchmark.cpp"
     INCLUDE_DIRS "."
 )

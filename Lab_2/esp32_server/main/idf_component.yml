@@ -1,2 +1,6 @@
+## Dependencias del componente main
 dependencies:
-  espressif/arduino-esp32: "*"
+  idf:
+    version: ">=5.0.0"
+  espressif/led_strip:
+    version: ">=2.0.0"
