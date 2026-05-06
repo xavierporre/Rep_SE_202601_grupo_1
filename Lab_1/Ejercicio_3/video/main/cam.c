@@ -56,7 +56,7 @@ void histogram_equalization(uint8_t *img, int size) {
     }
 }
 
-static void capture_and_output(void)
+static void capture_and_output(char ch)
 {
     camera_fb_t *pic = esp_camera_fb_get();
     if (!pic) {
@@ -70,7 +70,7 @@ static void capture_and_output(void)
     histogram_equalization(pic->buf, pic->len);
 
     // 🔥 SALIDA PARA TXT / COLAB
-    printf("DATA_START\n");
+    printf("DATA_START: %c\n", ch);
     for (int i = 0; i < pic->len; i++) {
         printf("0x%02X,", pic->buf[i]);
     }
@@ -129,13 +129,13 @@ void app_main(void)
     }
 
     ESP_LOGI(TAG, "Cámara iniciada");
-    printf("Listo. Pulsa 's' + Enter para sacar una foto (o 'q' + Enter para salir).\n");
+    printf("Listo. Pulsa '1'/'0' + Enter para sacar una foto (o 'q' + Enter para salir).\n");
 
     while (1) {
         int ch = getchar();
 
-        if (ch == 's' || ch == 'S') {
-            capture_and_output();
+        if (ch == '1' || ch == '0') {
+            capture_and_output(ch);
             printf("OK. Pulsa 's' + Enter para otra foto.\n");
         } else if (ch == 'q' || ch == 'Q') {
             printf("Saliendo...\n");
