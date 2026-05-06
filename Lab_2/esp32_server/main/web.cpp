@@ -30,6 +30,8 @@ static const char* TAG = "AutoRC";
 #define LED_GPIO 48
 static led_strip_handle_t strip;
 
+extern void benchmark_all();
+
 void ledInit() {
   led_strip_config_t cfg = {};
   cfg.strip_gpio_num = LED_GPIO;
@@ -339,6 +341,8 @@ static esp_err_t hOptions(httpd_req_t *req) {
 
 // ── app_main ───────────────────────────────────────────────
 extern "C" void app_main() {
+
+  benchmark_all();
 
   // Deshabilitar aislamiento de GPIOs en sleep
   gpio_hold_dis((gpio_num_t)IN1);
