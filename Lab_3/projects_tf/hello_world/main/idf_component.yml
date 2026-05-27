@@ -1,0 +1,2 @@
+# Component manifest
+# Uses local esp-tflite-micro component defined via EXTRA_COMPONENT_DIRS in CMakeLists.txt

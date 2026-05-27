@@ -1,0 +1,4 @@
+version: "1.0"
+description: "TensorFlow Lite Micro wrapper component for local projects"
+dependencies:
+  espressif/esp-tflite-micro: "*"
