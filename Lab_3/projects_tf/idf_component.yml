@@ -1,3 +1,0 @@
-version: "1.0"
-description: "TensorFlow Lite Micro local projects wrapper"
-# No dependencies - we'll use local esp-tflite-micro
