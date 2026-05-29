@@ -1,2 +1,2 @@
-source /home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/video/build/bootloader/gdbinit/symbols
-source /home/ap6d2/esp/projects/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/video/build/bootloader/gdbinit/connect
+source /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/video/build/bootloader/gdbinit/symbols
+source /Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/video/build/bootloader/gdbinit/connect

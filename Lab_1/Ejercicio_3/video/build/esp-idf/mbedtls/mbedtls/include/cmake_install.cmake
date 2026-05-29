@@ -1,4 +1,4 @@
-# Install script for directory: /home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include
+# Install script for directory: /Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -32,38 +32,44 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "TRUE")
 endif()
 
-# Set default install directory permissions.
+# Set path to fallback-tool for dependency-resolution.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "/home/ap6d2/esp/idf-tools/tools/xtensa-esp-elf/esp-15.2.0_20251204/xtensa-esp-elf/bin/xtensa-esp32-elf-objdump")
+  set(CMAKE_OBJDUMP "/Users/xavierporre/esp/idf-tools/tools/xtensa-esp-elf/esp-15.2.0_20251204/xtensa-esp-elf/bin/xtensa-esp32-elf-objdump")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/mbedtls" TYPE FILE PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ FILES
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/build_info.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/debug.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/error.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/mbedtls_config.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/net_sockets.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/oid.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/pkcs7.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ssl.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ssl_cache.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ssl_ciphersuites.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ssl_cookie.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ssl_ticket.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/timing.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/version.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/x509.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/x509_crl.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/x509_crt.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/x509_csr.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/build_info.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/debug.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/error.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/mbedtls_config.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/net_sockets.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/oid.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/pkcs7.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ssl.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ssl_cache.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ssl_ciphersuites.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ssl_cookie.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ssl_ticket.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/timing.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/version.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/x509.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/x509_crl.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/x509_crt.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/x509_csr.h"
     )
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/mbedtls/private" TYPE FILE PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ FILES
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/private/config_adjust_ssl.h"
-    "/home/ap6d2/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/private/config_adjust_x509.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/private/config_adjust_ssl.h"
+    "/Users/xavierporre/esp/idf/esp-idf/components/mbedtls/mbedtls/include/mbedtls/private/config_adjust_x509.h"
     )
 endif()
 
+string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
+       "${CMAKE_INSTALL_MANIFEST_FILES}")
+if(CMAKE_INSTALL_LOCAL_ONLY)
+  file(WRITE "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_1/Ejercicio_3/video/build/esp-idf/mbedtls/mbedtls/include/install_local_manifest.txt"
+     "${CMAKE_INSTALL_MANIFEST_CONTENT}")
+endif()
