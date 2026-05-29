@@ -207,3 +207,30 @@ void run_inference(void *ptr) {
       (no_person_score - output->params.zero_point) * output->params.scale;
   RespondToDetection(person_score_f, no_person_score_f);
 }
+
+void run_inference_int8(const int8_t *ptr) {
+  /* Data is already int8 (XOR 0x80 pre-applied), copy directly */
+  for (int i = 0; i < kNumCols * kNumRows; i++) {
+    input->data.int8[i] = ptr[i];
+  }
+
+#if defined(COLLECT_CPU_STATS)
+  long long start_time = esp_timer_get_time();
+#endif
+  if (kTfLiteOk != interpreter->Invoke()) {
+    MicroPrintf("Invoke failed.");
+  }
+#if defined(COLLECT_CPU_STATS)
+  long long total_time = (esp_timer_get_time() - start_time);
+  printf("Total time = %lld\n", total_time / 1000);
+#endif
+
+  TfLiteTensor* output = interpreter->output(0);
+  int8_t person_score = output->data.uint8[kPersonIndex];
+  int8_t no_person_score = output->data.uint8[kNotAPersonIndex];
+  float person_score_f =
+      (person_score - output->params.zero_point) * output->params.scale;
+  float no_person_score_f =
+      (no_person_score - output->params.zero_point) * output->params.scale;
+  RespondToDetection(person_score_f, no_person_score_f);
+}

@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "IDF Build person_detection",
+			"type": "shell",
+			"command": "source ~/esp/idf/esp-idf/export.sh && idf.py build",
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

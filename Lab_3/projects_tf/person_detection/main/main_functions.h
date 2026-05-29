@@ -1,3 +1,4 @@
+#include <cstdint>
 /* Copyright 2019 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +30,12 @@ void setup();
 // repeatedly from the application code. The name needs to be loop() for Arduino
 // compatibility.
 void loop();
+
+// Runs inference on a raw uint8 image buffer (applies XOR 0x80 internally).
+void run_inference(void *ptr);
+
+// Runs inference on a pre-converted int8 image buffer (no XOR applied).
+void run_inference_int8(const int8_t *ptr);
 
 #ifdef __cplusplus
 }

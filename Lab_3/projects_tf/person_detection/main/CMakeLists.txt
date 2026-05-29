@@ -12,6 +12,7 @@ idf_component_register(
         "model_settings.cc"
         "person_detect_model_data.cc"
         "esp_cli.c"
+        "person_images_bridge.cc"
 
     PRIV_REQUIRES console static_images spi_flash
     INCLUDE_DIRS "")

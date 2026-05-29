@@ -39,6 +39,13 @@ extern const uint8_t image6_start[]   asm("_binary_image6_start");
 extern const uint8_t image7_start[]   asm("_binary_image7_start");
 extern const uint8_t image8_start[]   asm("_binary_image8_start");
 extern const uint8_t image9_start[]   asm("_binary_image9_start");
+
+// Group member photos (pre-converted int8 format) - via bridge functions
+extern const int8_t *get_person_image_1(void);
+extern const int8_t *get_person_image_2(void);
+extern const int8_t *get_person_image_3(void);
+
+extern void run_inference_int8(const int8_t *ptr);
 #endif
 
 static const char *TAG = "[esp_cli]";
@@ -134,6 +141,40 @@ int esp_cli_register_inference_command() {
     esp_console_cmd_register(&command);
     return 0;
 }
+
+static int person_inference_cli_handler(int argc, char *argv[])
+{
+    printf("\n");
+    if (argc != 2) {
+        printf("%s: Incorrect arguments. Usage: detect_person <1|2|3>\n", TAG);
+        return 0;
+    }
+    int person_number = atoi(argv[1]);
+    const int8_t *person_images[] = {
+        get_person_image_1(),
+        get_person_image_2(),
+        get_person_image_3(),
+    };
+    if (person_number < 1 || person_number > 3) {
+        ESP_LOGE(TAG, "Please enter a valid number (1 - 3)");
+        return -1;
+    }
+    unsigned detect_time = esp_timer_get_time();
+    run_inference_int8(person_images[person_number - 1]);
+    detect_time = (esp_timer_get_time() - detect_time) / 1000;
+    ESP_LOGI(TAG, "Time required for the inference is %u ms", detect_time);
+    return 0;
+}
+
+int esp_cli_register_person_command() {
+    esp_console_cmd_t command = {
+        .command = "detect_person",
+        .help = "detect_person <1|2|3> - Run inference on group member photo",
+        .func = person_inference_cli_handler,
+    };
+    esp_console_cmd_register(&command);
+    return 0;
+}
 #endif
 
 static esp_console_cmd_t diag_cmds[] = {
@@ -194,6 +235,10 @@ int esp_cli_start()
 
     esp_console_register_help_command();
     esp_cli_register_cmds();
+#if CLI_ONLY_INFERENCE
+    esp_cli_register_inference_command();
+    esp_cli_register_person_command();
+#endif
 #if defined(CONFIG_ESP_CONSOLE_UART_DEFAULT) || defined(CONFIG_ESP_CONSOLE_UART_CUSTOM)
     esp_console_dev_uart_config_t hw_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_console_new_repl_uart(&hw_config, &repl_config, &repl));

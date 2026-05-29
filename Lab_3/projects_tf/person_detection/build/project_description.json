@@ -1,7 +1,7 @@
 {
     "version":            "1.3",
     "project_name":       "person_detection",
-    "project_version":    "e6699c6",
+    "project_version":    "e92dd6f-dirty",
     "project_path":       "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection",
     "idf_path":           "/Users/xavierporre/esp/idf/esp-idf",
     "build_dir":          "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/build",
@@ -1810,7 +1810,7 @@
             "managed_reqs": [],
             "managed_priv_reqs": [ "esp-tflite-micro" ],
             "file": "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/build/esp-idf/main/libmain.a",
-            "sources": [ "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/detection_responder.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/image_provider.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/main.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/main_functions.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/model_settings.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/person_detect_model_data.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/esp_cli.c" ],
+            "sources": [ "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/detection_responder.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/image_provider.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/main.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/main_functions.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/model_settings.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/person_detect_model_data.cc", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/esp_cli.c", "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Lab_3/projects_tf/person_detection/main/person_images_bridge.cc" ],
             "include_dirs": []
         },
         "mbedtls": {
