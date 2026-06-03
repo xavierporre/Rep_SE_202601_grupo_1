@@ -1,0 +1,6 @@
+dependencies:
+  espressif/esp-tflite-micro:
+    version: "*"
+    override_path: "../../../../esp-tflite-micro"
+  espressif/esp32-camera:
+    version: "*"
