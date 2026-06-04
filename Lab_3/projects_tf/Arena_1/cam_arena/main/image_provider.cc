@@ -128,14 +128,12 @@ TfLiteStatus GetImage(int image_width, int image_height, int channels, int8_t* i
     }
   }
 #else // DISPLAY_SUPPORT
-  MicroPrintf("Image Captured\n");
-  // We have initialised camera to grayscale
-  // Just quantize to int8_t
+  // We have initialised camera to grayscale, just quantize to int8_t
   for (int i = 0; i < image_width * image_height; i++) {
     image_data[i] = ((uint8_t *) fb->buf)[i] ^ 0x80;
   }
-
   esp_camera_fb_return(fb);
+  fb = NULL;
 #endif // DISPLAY_SUPPORT
   /* here the esp camera can give you grayscale image directly */
   return kTfLiteOk;

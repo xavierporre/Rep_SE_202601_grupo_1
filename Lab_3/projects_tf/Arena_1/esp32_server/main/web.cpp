@@ -13,6 +13,7 @@
 #include <esp_log.h>
 #include <esp_http_server.h>
 #include <esp_http_client.h>
+#include <esp_timer.h>
 #include <esp_wifi.h>
 #include <esp_netif.h>
 #include <nvs_flash.h>
@@ -29,8 +30,9 @@
 static const char* TAG = "AutoRC";
 
 // ── Modo AUTO ──────────────────────────────────────────────
-#define AUTO_SPD  80
-#define POLL_MS   250
+#define AUTO_SPD              80
+#define POLL_MS              100
+#define AUTO_SAFETY_TIMEOUT_MS 500
 
 static volatile bool g_auto_mode = false;
 static char          g_cam_ip[20] = "";
@@ -307,7 +309,7 @@ void turnRight(int s) {
 }
 
 // ── autoTask ──────────────────────────────────────────────
-static char s_auto_resp[128];
+static char s_auto_resp[256];
 static int  s_auto_resp_len = 0;
 
 static esp_err_t auto_http_event(esp_http_client_event_t *evt) {
@@ -323,6 +325,8 @@ static esp_err_t auto_http_event(esp_http_client_event_t *evt) {
 }
 
 static void autoTask(void *) {
+    static uint32_t s_last_ok_ms = 0;
+
     while (true) {
         if (!g_auto_mode) { motorStop(); vTaskDelay(pdMS_TO_TICKS(100)); continue; }
         if (!g_cam_ip[0])  { moveForward(AUTO_SPD); vTaskDelay(pdMS_TO_TICKS(POLL_MS)); continue; }
@@ -335,29 +339,36 @@ static void autoTask(void *) {
 
         esp_http_client_config_t cfg = {};
         cfg.url            = url;
-        cfg.timeout_ms     = 300;
+        cfg.timeout_ms     = 200;
         cfg.event_handler  = auto_http_event;
         cfg.method         = HTTP_METHOD_GET;
 
         esp_http_client_handle_t cl = esp_http_client_init(&cfg);
-        esp_http_client_perform(cl);
+        esp_err_t http_err = esp_http_client_perform(cl);
         esp_http_client_cleanup(cl);
 
-        // Parsear campo "edge":"xxx"
-        char *p = strstr(s_auto_resp, "\"edge\":\"");
-        if (p) {
-            p += 8;
-            if (strncmp(p, "left",  4) == 0) {
-                turnLeft(AUTO_SPD); setLED(0, 0, 180);
-                ESP_LOGI(TAG, "[AUTO] IZQUIERDA");
-            } else if (strncmp(p, "right", 5) == 0) {
-                turnRight(AUTO_SPD); setLED(180, 180, 0);
-                ESP_LOGI(TAG, "[AUTO] DERECHA");
+        uint32_t now_ms = (uint32_t)(esp_timer_get_time() / 1000ULL);
+
+        if (http_err == ESP_OK && s_auto_resp_len > 0) {
+            s_last_ok_ms = now_ms;
+
+            // Parsear campo "action" para control del motor
+            char *ap = strstr(s_auto_resp, "\"action\":\"");
+            if (ap) {
+                ap += 10;
+                if      (strncmp(ap, "turn_left",  9)  == 0) { turnLeft(AUTO_SPD);    setLED(0, 0, 180);   ESP_LOGI(TAG, "[AUTO] IZQUIERDA"); }
+                else if (strncmp(ap, "turn_right", 10) == 0) { turnRight(AUTO_SPD);   setLED(180, 180, 0); ESP_LOGI(TAG, "[AUTO] DERECHA");   }
+                else if (strncmp(ap, "stop",        4) == 0) { motorStop();            setLED(180, 0, 0);   ESP_LOGI(TAG, "[AUTO] STOP");      }
+                else                                          { moveForward(AUTO_SPD); setLED(0, 80, 0);                                       }
             } else {
                 moveForward(AUTO_SPD); setLED(0, 80, 0);
             }
         } else {
-            moveForward(AUTO_SPD); setLED(0, 80, 0);
+            // Sin respuesta valida: aplicar timeout de seguridad
+            if ((now_ms - s_last_ok_ms) >= AUTO_SAFETY_TIMEOUT_MS) {
+                motorStop(); setLED(40, 0, 0);
+                ESP_LOGW(TAG, "[AUTO] timeout camara — motor detenido");
+            }
         }
 
         vTaskDelay(pdMS_TO_TICKS(POLL_MS));

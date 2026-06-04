@@ -21,12 +21,12 @@ static const char *TAG = "stream_server";
 
 /* ── Globales compartidos ────────────────────────────────────────────────── */
 SemaphoreHandle_t g_detection_mutex = NULL;
-detection_result_t g_detection_result = {"none", false, 0};
+detection_result_t g_detection_result = {"none", "forward", {0,0,0}, {{0,0,0},{0,0,0}}, false, 0};
 
 /* ── Handler /detection ──────────────────────────────────────────────────── */
 static esp_err_t detection_handler(httpd_req_t *req)
 {
-    char json[96];
+    char json[200];
     detection_result_t r;
 
     if (xSemaphoreTake(g_detection_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
@@ -37,8 +37,14 @@ static esp_err_t detection_handler(httpd_req_t *req)
     }
 
     snprintf(json, sizeof(json),
-             "{\"edge\":\"%s\",\"identifier\":%s,\"confidence\":%d}",
-             r.edge,
+             "{\"edge\":\"%s\",\"action\":\"%s\","
+             "\"dist\":[%d,%d,%d],"
+             "\"grid\":[[%d,%d,%d],[%d,%d,%d]],"
+             "\"identifier\":%s,\"confidence\":%d}",
+             r.edge, r.action,
+             (int)r.dist[0], (int)r.dist[1], (int)r.dist[2],
+             (int)r.grid[0][0], (int)r.grid[0][1], (int)r.grid[0][2],
+             (int)r.grid[1][0], (int)r.grid[1][1], (int)r.grid[1][2],
              r.identifier ? "true" : "false",
              r.confidence);
 

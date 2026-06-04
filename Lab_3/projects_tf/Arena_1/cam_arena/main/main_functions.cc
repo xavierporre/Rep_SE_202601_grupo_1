@@ -53,24 +53,22 @@ constexpr int scratchBufSize = 0;
 // An area of memory to use for input, output, and intermediate arrays.
 // Keeping allocation on bit larger size to accomodate future needs.
 constexpr int kTensorArenaSize = 100 * 1024 + scratchBufSize;
-static uint8_t *tensor_arena;//[kTensorArenaSize]; // Maybe we should move this to external
+// Arena estática en SPIRAM (BSS externo) — elimina fragmentación del heap
+static uint8_t tensor_arena[kTensorArenaSize] EXT_RAM_BSS_ATTR;
 }  // namespace
 
 void setup() {
+  // Guard: inicializar solo una vez
+  static bool s_setup_done = false;
+  if (s_setup_done) return;
+  s_setup_done = true;
+
   // Map the model into a usable data structure. This doesn't involve any
   // copying or parsing, it's a very lightweight operation.
   model = tflite::GetModel(g_person_detect_model_data);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     MicroPrintf("Model provided is schema version %d not equal to supported "
                 "version %d.", model->version(), TFLITE_SCHEMA_VERSION);
-    return;
-  }
-
-  if (tensor_arena == NULL) {
-    tensor_arena = (uint8_t *) heap_caps_malloc(kTensorArenaSize, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-  }
-  if (tensor_arena == NULL) {
-    printf("Couldn't allocate memory of %d bytes\n", kTensorArenaSize);
     return;
   }
 
@@ -121,6 +119,15 @@ void setup() {
 
 #ifndef CLI_ONLY_INFERENCE
 void loop() {
+  // Monitor de heap cada 5 s para detectar fugas de memoria
+  static uint32_t s_last_heap_ms = 0;
+  uint32_t now_ms = (uint32_t)(esp_timer_get_time() / 1000ULL);
+  if (now_ms - s_last_heap_ms >= 5000) {
+    ESP_LOGI("HEAP", "libre: %d | SPIRAM libre: %d",
+             (int)esp_get_free_heap_size(),
+             (int)heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+    s_last_heap_ms = now_ms;
+  }
   // Capturar imagen de la cámara
   if (kTfLiteOk != GetImage(kNumCols, kNumRows, kNumChannels, input->data.int8)) {
     MicroPrintf("Image capture failed.");
