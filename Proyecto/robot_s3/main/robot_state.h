@@ -1,0 +1,57 @@
+/*
+ * robot_state — constantes, tipos y API de motores compartidos
+ *
+ * Robot de ring: superficie blanca con bordes de cinta negra.
+ * El ESP32-S3 recibe por UART1 (TX=GPIO17, RX=GPIO18) los datos de la
+ * ESP32-CAM: deteccion de borde (grilla 3x2) + identificador (modelo TFLite).
+ */
+
+#ifndef ROBOT_S3_ROBOT_STATE_H_
+#define ROBOT_S3_ROBOT_STATE_H_
+
+#include <stdint.h>
+#include <stdbool.h>
+
+// ── Velocidades (requisito del proyecto) ───────────────────────────────
+#define SPEED_LINEAR     100   // % PWM movimientos lineales (adelante/atras)
+#define SPEED_TURN        90   // % PWM giros sobre el eje (ruedas opuestas)
+
+// ── Temporizacion ──────────────────────────────────────────────────────
+#define CTRL_TICK_MS      50   // periodo del lazo de control (20 Hz)
+#define UART_TIMEOUT_MS  500   // sin datos de camara → parada de seguridad
+#define BACKOFF_MS       400   // retroceso tras tocar el borde
+#define TURN_180_MS     1200   // giro ~180° a SPEED_TURN — CALIBRAR en el robot
+#define TURN_90_MS       600   // giro ~90° a SPEED_TURN  — CALIBRAR en el robot
+#define PATROL_TURN_MS   200   // tramo de giro del arco de busqueda (patrulla)
+#define PATROL_FWD_MS    350   // tramo recto del arco de busqueda (patrulla)
+
+// ── Identificador (modelo embutido en la CAM) ──────────────────────────
+#define IDENT_CONF_THR    75   // confianza minima (%) para iniciar la carga
+#define IDENT_LOST_MS   2000   // sin deteccion durante la carga → volver a escanear
+
+// ── Modos de operacion (ordenes del servidor web) ──────────────────────
+typedef enum {
+    MODE_MANUAL = 0,   // control manual desde la web (d-pad)
+    MODE_FIND,         // buscar y destruir: escanear → cargar al identificador
+    MODE_PATROL,       // patrullar el perimetro siguiendo la cinta (CCW)
+    MODE_RETREAT,      // retirada: ir a una esquina del ring y mantenerse
+} robot_mode_t;
+
+// Ultimo dato recibido de la camara por UART
+typedef struct {
+    char   action[16];  // sugerencia de la CAM: forward|turn_left|turn_right|stop
+    int8_t dist[3];     // [izq, centro, der]: 0=sin borde, 1=lejos, 2=cerca
+    bool   ident;       // identificador detectado (score >= 0.75 en la CAM)
+    int    conf;        // confianza 0..100
+} cam_data_t;
+
+// ── Motores y LED (implementados en web.cpp, pines L298N del template) ─
+void setPWM(int spd100);
+void motorStop();
+void moveForward(int s);
+void moveBackward(int s);
+void turnLeft(int s);     // giro sobre el eje: A atras, B adelante
+void turnRight(int s);    // giro sobre el eje: A adelante, B atras
+void setLED(uint8_t r, uint8_t g, uint8_t b);
+
+#endif  // ROBOT_S3_ROBOT_STATE_H_
