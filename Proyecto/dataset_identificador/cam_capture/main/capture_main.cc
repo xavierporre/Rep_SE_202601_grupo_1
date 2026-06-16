@@ -115,6 +115,16 @@ static void capture_task(void *) {
         int n = read(fileno(stdin), &c, 1);
         if (n == 1 && c == 'c') {
             gpio_set_level(LED_FLASH_GPIO, 1);
+
+            // El driver esp32-camera sigue llenando el ring buffer (fb_count=2)
+            // en segundo plano mientras esperamos el comando: esp_camera_fb_get()
+            // devuelve el frame mas viejo en cola, no el actual. Se descartan
+            // los frames atrasados antes de tomar el que realmente se va a usar.
+            for (int i = 0; i < 2; i++) {
+                camera_fb_t *stale = esp_camera_fb_get();
+                if (stale) esp_camera_fb_return(stale);
+            }
+
             camera_fb_t *fb = esp_camera_fb_get();
             if (!fb) {
                 printf("ERR:capture_failed\n");
