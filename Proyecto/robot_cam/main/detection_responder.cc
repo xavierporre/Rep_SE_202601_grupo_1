@@ -114,8 +114,7 @@ static void analyze_grid(uint8_t grid[2][3], int8_t dist[3], char *action_out) {
         s_count = 0;
     }
 
-    strncpy(action_out, s_confirmed, 15);
-    action_out[15] = '\0';
+    snprintf(action_out, 16, "%s", s_confirmed);
 }
 
 void RespondToDetection(float person_score, float no_person_score) {
@@ -139,7 +138,7 @@ void RespondToDetection(float person_score, float no_person_score) {
         ESP_LOGI(TAG, "[CAM] accion=%s dist=[%d,%d,%d] ident=%d conf=%d%%",
                  action, (int)dist[0], (int)dist[1], (int)dist[2],
                  ident ? 1 : 0, conf);
-        strncpy(s_last_action_log, action, sizeof(s_last_action_log) - 1);
+        snprintf(s_last_action_log, sizeof(s_last_action_log), "%s", action);
         s_last_ident_log = ident;
     }
 
