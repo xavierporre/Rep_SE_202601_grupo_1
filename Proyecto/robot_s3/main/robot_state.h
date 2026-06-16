@@ -14,19 +14,23 @@
 
 // ── Velocidades (requisito del proyecto) ───────────────────────────────
 #define SPEED_LINEAR     100   // % PWM movimientos lineales (adelante/atras)
-#define SPEED_TURN        90   // % PWM giros sobre el eje (ruedas opuestas)
+#define SPEED_TURN        80   // % PWM giros sobre el eje (ruedas opuestas) — reducido a 80% para dar tiempo a la CAM
 
 // ── Temporizacion ──────────────────────────────────────────────────────
 #define CTRL_TICK_MS      50   // periodo del lazo de control (20 Hz)
 #define UART_TIMEOUT_MS  500   // sin datos de camara → parada de seguridad
-#define BACKOFF_MS       400   // retroceso tras tocar el borde
+#define AVOID_TURN_MS      400   // giro de evasion tras tocar el borde (tope maximo)
+#define AVOID_TURN_MIN_MS  150   // giro minimo antes de poder cortar por sensor
 #define TURN_180_MS     1200   // giro ~180° a SPEED_TURN — CALIBRAR en el robot
 #define TURN_90_MS       600   // giro ~90° a SPEED_TURN  — CALIBRAR en el robot
+#define RETREAT_DRIVE_TIMEOUT_MS  6000  // tope para encontrar el borde de enfrente en RETREAT (atasco)
+#define RETREAT_EDGE_TIMEOUT_MS   6000  // tope para llegar a la esquina siguiendo el borde en RETREAT
 #define PATROL_TURN_MS   200   // tramo de giro del arco de busqueda (patrulla)
 #define PATROL_FWD_MS    350   // tramo recto del arco de busqueda (patrulla)
+#define PATROL_NUDGE_PERIOD_TICKS 4  // cada cuantos ticks (50 ms) corregir hacia la cinta lejana
 
 // ── Identificador (modelo embutido en la CAM) ──────────────────────────
-#define IDENT_CONF_THR    75   // confianza minima (%) para iniciar la carga
+#define IDENT_CONF_THR    50   // confianza minima (%) para iniciar la carga
 #define IDENT_LOST_MS   2000   // sin deteccion durante la carga → volver a escanear
 
 // ── Modos de operacion (ordenes del servidor web) ──────────────────────
@@ -41,7 +45,7 @@ typedef enum {
 typedef struct {
     char   action[16];  // sugerencia de la CAM: forward|turn_left|turn_right|stop
     int8_t dist[3];     // [izq, centro, der]: 0=sin borde, 1=lejos, 2=cerca
-    bool   ident;       // identificador detectado (score >= 0.75 en la CAM)
+    bool   ident;       // identificador detectado (score >= 0.50 en la CAM)
     int    conf;        // confianza 0..100
 } cam_data_t;
 

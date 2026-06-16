@@ -1,8 +1,12 @@
 #include "detection_responder.h"
 #include "uart_comm.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "driver/gpio.h"
 #include <string.h>
+
+// DIAGNOSTICO TEMPORAL (Fase 0): mide la Hz real de inferencia. Quitar al terminar.
+#define DIAG_INFERENCE_HZ_LOG_EVERY_N  20
 
 // ── Grilla 3×2: bandas de filas ──────────────────────────────────────────
 #define GRID_ROW_TOP_START    0
@@ -18,8 +22,19 @@
 // Histeresis: frames consecutivos para confirmar un cambio de acción
 #define ACTION_CONFIRM_N      3
 
-// Umbral del identificador (modelo embutido)
-#define IDENT_THRESHOLD    0.75f
+// Umbral del identificador (modelo embutido) — alineado con IDENT_CONF_THR
+// del S3 (robot_state.h) para que el LED refleje el mismo criterio que
+// efectivamente decide el comportamiento del robot.
+#define IDENT_THRESHOLD    0.50f
+// Suavizado del score (EMA): reduce falsos negativos por ruido frame a frame.
+// Alpha bajo = mas memoria (no perder el identificador por una caida puntual
+// del score); ajustar segun la Hz de inferencia real medida en campo (Fase 0).
+#define IDENT_EMA_ALPHA    0.18f
+// Histeresis: frames consecutivos de score bajo el umbral antes de soltar el
+// identificador. La subida no necesita histeresis (reaccionar rapido al
+// aparecer el objetivo); solo la perdida se confirma para evitar que un
+// frame ruidoso lo haga desaparecer "casi de inmediato".
+#define IDENT_LOST_CONFIRM_N  4
 // LED flash AI-Thinker: encendido mientras el identificador está detectado
 #define LED_FLASH_GPIO     GPIO_NUM_4
 
@@ -118,16 +133,56 @@ static void analyze_grid(uint8_t grid[2][3], int8_t dist[3], char *action_out) {
 }
 
 void RespondToDetection(float person_score, float no_person_score) {
+    // DIAGNOSTICO TEMPORAL (Fase 0): Hz real de inferencia. Quitar al terminar.
+    {
+        static int64_t s_last_us = 0;
+        static int     s_calls   = 0;
+        int64_t now_us = esp_timer_get_time();
+        if (s_last_us != 0 && (++s_calls % DIAG_INFERENCE_HZ_LOG_EVERY_N) == 0) {
+            int64_t delta_us = now_us - s_last_us;
+            float   hz = (delta_us > 0)
+                ? (DIAG_INFERENCE_HZ_LOG_EVERY_N * 1000000.0f / delta_us)
+                : 0.0f;
+            ESP_LOGI(TAG, "[DIAG] inferencia ~%.2f Hz (delta %lld us / %d frames)",
+                     hz, (long long)delta_us, DIAG_INFERENCE_HZ_LOG_EVERY_N);
+            s_last_us = now_us;
+        } else if (s_last_us == 0) {
+            s_last_us = now_us;
+        }
+    }
+
     uint8_t grid[2][3];
     int8_t  dist[3];
     char    action[16];
 
     analyze_grid(grid, dist, action);
 
-    bool ident = (person_score >= IDENT_THRESHOLD);
-    int  conf  = (int)(person_score * 100 + 0.5f);
+    // EMA del score: evita que un solo frame ruidoso por debajo del umbral
+    // tire abajo el identificador (antes se evaluaba el score crudo).
+    static float s_score_ema = 0.0f;
+    s_score_ema += IDENT_EMA_ALPHA * (person_score - s_score_ema);
+
+    int conf = (int)(s_score_ema * 100 + 0.5f);
     if (conf < 0)   conf = 0;
     if (conf > 100) conf = 100;
+
+    // Histeresis de perdida: el identificador solo se suelta tras
+    // IDENT_LOST_CONFIRM_N frames consecutivos bajo el umbral, para no
+    // perderlo "casi de inmediato" por un solo frame ruidoso. La subida es
+    // inmediata (sin retraso al aparecer el objetivo).
+    static bool    s_ident_confirmed = false;
+    static uint8_t s_lost_count      = 0;
+    bool above = (s_score_ema >= IDENT_THRESHOLD);
+    if (above) {
+        s_ident_confirmed = true;
+        s_lost_count      = 0;
+    } else if (s_ident_confirmed) {
+        if (++s_lost_count >= IDENT_LOST_CONFIRM_N) {
+            s_ident_confirmed = false;
+            s_lost_count      = 0;
+        }
+    }
+    bool ident = s_ident_confirmed;
 
     gpio_set_level(LED_FLASH_GPIO, ident ? 1 : 0);
 

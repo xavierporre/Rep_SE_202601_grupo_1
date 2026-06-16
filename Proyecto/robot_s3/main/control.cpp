@@ -20,8 +20,7 @@ typedef enum {
     SUB_FD_AVOID,       // retroceso tras tocar el borde
     // PATROL
     SUB_PAT_RUN,        // seguir el borde (cinta a la derecha, vuelta CCW)
-    SUB_PAT_AVOID,      // retroceso tras tocar el borde
-    SUB_PAT_AVOID_TURN, // giro de recuperacion tras el retroceso
+    SUB_PAT_AVOID,      // giro de evasion tras tocar el borde
     SUB_PAT_SEARCH_TURN,// borde perdido: tramo de giro del arco de busqueda
     SUB_PAT_SEARCH_FWD, // borde perdido: tramo recto del arco de busqueda
     // RETREAT (a una esquina del ring rectangular)
@@ -39,7 +38,6 @@ static const char *sub_name(sub_state_t s) {
         case SUB_FD_AVOID:        return "avoid";
         case SUB_PAT_RUN:         return "track";
         case SUB_PAT_AVOID:       return "avoid";
-        case SUB_PAT_AVOID_TURN:  return "avoid_turn";
         case SUB_PAT_SEARCH_TURN: return "search_turn";
         case SUB_PAT_SEARCH_FWD:  return "search_fwd";
         case SUB_RT_TURN180:      return "turn180";
@@ -70,6 +68,8 @@ static volatile bool         g_link_ok       = false;
 static bool                  g_link_was_lost = false;
 static cam_data_t            g_cam;                // copia del ultimo dato usado
 static uint32_t              g_cam_age_ms    = 0;
+static int8_t                g_pat_last_side = 0;   // ultimo lado con borde visto en PATROL: +1 der, -1 izq, 0 ninguno
+static uint8_t                g_pat_nudge_tick = 0;  // contador para el guino de correccion en SUB_PAT_RUN
 
 static inline uint32_t millis() {
     return (uint32_t)(esp_timer_get_time() / 1000ULL);
@@ -93,7 +93,9 @@ void control_set_mode(robot_mode_t m) {
         case MODE_RETREAT: enter_timed(SUB_RT_TURN180, TURN_180_MS); break;
         default:           enter_sub(SUB_NONE);                     break;
     }
-    g_last_ident_ms = 0;
+    g_last_ident_ms  = 0;
+    g_pat_last_side  = 0;
+    g_pat_nudge_tick = 0;
     portEXIT_CRITICAL(&s_lock);
     motorStop();
     ESP_LOGI(TAG, "Modo → %s", mode_name(m));
@@ -106,20 +108,25 @@ robot_mode_t control_get_mode(void) {
 // ── Comportamiento FIND: escanear → cargar → esquivar borde ────────────
 static void tick_find(const cam_data_t *cam, uint32_t now, bool border_near) {
     if (border_near && g_sub != SUB_FD_AVOID) {
-        enter_timed(SUB_FD_AVOID, BACKOFF_MS);
+        enter_timed(SUB_FD_AVOID, AVOID_TURN_MS);
     }
 
     switch (g_sub) {
-        case SUB_FD_AVOID:
-            moveBackward(SPEED_LINEAR);
+        case SUB_FD_AVOID: {
+            if      (cam->dist[0] == 2) turnRight(SPEED_TURN);  // borde izq. cerca → girar a la derecha
+            else if (cam->dist[2] == 2) turnLeft(SPEED_TURN);   // borde der. cerca → girar a la izquierda
+            else                        turnRight(SPEED_TURN);  // borde de frente/ambos → giro por defecto
             setLED(180, 0, 0);
-            if ((int32_t)(now - g_sub_until) >= 0) enter_sub(SUB_FD_SCAN);
+            bool min_elapsed = (int32_t)(now - (g_sub_until - (AVOID_TURN_MS - AVOID_TURN_MIN_MS))) >= 0;
+            bool timed_out   = (int32_t)(now - g_sub_until) >= 0;
+            if (timed_out || (min_elapsed && !border_near)) enter_sub(SUB_FD_SCAN);
             break;
+        }
 
         case SUB_FD_SCAN:
             turnRight(SPEED_TURN);
             setLED(0, 120, 120);
-            if (cam->ident && cam->conf >= IDENT_CONF_THR) {
+            if (cam->conf >= IDENT_CONF_THR) {
                 g_last_ident_ms = now;
                 enter_sub(SUB_FD_CHARGE);
                 ESP_LOGI(TAG, "[FIND] identificador conf=%d%% → CARGA", cam->conf);
@@ -127,7 +134,7 @@ static void tick_find(const cam_data_t *cam, uint32_t now, bool border_near) {
             break;
 
         case SUB_FD_CHARGE:
-            if (cam->ident && cam->conf >= IDENT_CONF_THR) g_last_ident_ms = now;
+            if (cam->conf >= IDENT_CONF_THR) g_last_ident_ms = now;
             if (now - g_last_ident_ms > IDENT_LOST_MS) {
                 ESP_LOGI(TAG, "[FIND] identificador perdido → ESCANEO");
                 enter_sub(SUB_FD_SCAN);
@@ -148,38 +155,50 @@ static void tick_find(const cam_data_t *cam, uint32_t now, bool border_near) {
 
 // ── Comportamiento PATROL: cinta a la derecha, vuelta CCW ──────────────
 static void tick_patrol(const cam_data_t *cam, uint32_t now, bool border_near) {
-    if (border_near && g_sub != SUB_PAT_AVOID && g_sub != SUB_PAT_AVOID_TURN) {
-        enter_timed(SUB_PAT_AVOID, BACKOFF_MS);
+    if (border_near && g_sub != SUB_PAT_AVOID) {
+        enter_timed(SUB_PAT_AVOID, AVOID_TURN_MS);
     }
 
     bool any_border = (cam->dist[0] | cam->dist[1] | cam->dist[2]) != 0;
 
     switch (g_sub) {
-        case SUB_PAT_AVOID:
-            moveBackward(SPEED_LINEAR);
+        case SUB_PAT_AVOID: {
+            if      (cam->dist[2] == 2) turnLeft(SPEED_TURN);
+            else if (cam->dist[0] == 2) turnRight(SPEED_TURN);
+            else                        turnLeft(SPEED_TURN);  // borde de frente: doblar la esquina
             setLED(180, 0, 0);
-            if ((int32_t)(now - g_sub_until) >= 0)
-                enter_timed(SUB_PAT_AVOID_TURN, PATROL_TURN_MS);
+            bool min_elapsed = (int32_t)(now - (g_sub_until - (AVOID_TURN_MS - AVOID_TURN_MIN_MS))) >= 0;
+            bool timed_out   = (int32_t)(now - g_sub_until) >= 0;
+            if (timed_out || (min_elapsed && !border_near)) enter_sub(SUB_PAT_RUN);
             break;
-
-        case SUB_PAT_AVOID_TURN:
-            turnLeft(SPEED_TURN);
-            setLED(180, 0, 0);
-            if ((int32_t)(now - g_sub_until) >= 0) enter_sub(SUB_PAT_RUN);
-            break;
+        }
 
         case SUB_PAT_RUN:
             setLED(150, 150, 0);
+            if      (cam->dist[2] != 0) g_pat_last_side = 1;   // recordar de que lado se vio el borde
+            else if (cam->dist[0] != 0) g_pat_last_side = -1;
             if      (cam->dist[2] == 2) turnLeft(SPEED_TURN);       // borde der. cerca: alejarse
             else if (cam->dist[0] == 2) turnRight(SPEED_TURN);      // borde izq. cerca: alejarse
             else if (cam->dist[1] >= 1) turnLeft(SPEED_TURN);       // borde al frente: doblar la esquina
-            else if (cam->dist[2] == 1) moveForward(SPEED_LINEAR);  // siguiendo la cinta a la derecha
+            else if (cam->dist[2] == 1) {
+                // Siguiendo la cinta a la derecha (lejos): nudge periodico hacia
+                // ella en vez de ir siempre recto, para reaccionar antes de
+                // llegar a dist[2]==2 y reducir el riesgo de cruzarla.
+                if (++g_pat_nudge_tick % PATROL_NUDGE_PERIOD_TICKS == 0)
+                    turnRight(SPEED_TURN);
+                else
+                    moveForward(SPEED_LINEAR);
+            }
             else if (cam->dist[0] == 1) turnRight(SPEED_TURN);      // cinta quedo a la izq.: reorientar
             else enter_timed(SUB_PAT_SEARCH_TURN, PATROL_TURN_MS);  // cinta perdida: arco de busqueda
             break;
 
         case SUB_PAT_SEARCH_TURN:
-            turnRight(SPEED_TURN);
+            // Buscar hacia el lado donde se vio el borde por ultima vez (si se
+            // perdio por la izquierda, girar a la izquierda para recuperarlo,
+            // no siempre a la derecha).
+            if (g_pat_last_side < 0) turnLeft(SPEED_TURN);
+            else                     turnRight(SPEED_TURN);
             setLED(150, 150, 0);
             if (any_border) { enter_sub(SUB_PAT_RUN); break; }
             if ((int32_t)(now - g_sub_until) >= 0)
@@ -208,7 +227,8 @@ static void tick_retreat(const cam_data_t *cam, uint32_t now) {
         case SUB_RT_TURN180:
             turnRight(SPEED_TURN);
             setLED(120, 0, 120);
-            if ((int32_t)(now - g_sub_until) >= 0) enter_sub(SUB_RT_DRIVE);
+            if ((int32_t)(now - g_sub_until) >= 0)
+                enter_timed(SUB_RT_DRIVE, RETREAT_DRIVE_TIMEOUT_MS);
             break;
 
         case SUB_RT_DRIVE:
@@ -216,6 +236,11 @@ static void tick_retreat(const cam_data_t *cam, uint32_t now) {
             if (cam->dist[1] == 2 || (cam->dist[0] == 2 && cam->dist[2] == 2)) {
                 motorStop();
                 enter_timed(SUB_RT_TURN90, TURN_90_MS);
+            } else if ((int32_t)(now - g_sub_until) >= 0) {
+                // Atasco: no se encontro el borde de enfrente a tiempo.
+                motorStop();
+                ESP_LOGW(TAG, "[RETREAT] timeout en DRIVE — borde no encontrado");
+                enter_sub(SUB_RT_HOLD);
             } else {
                 moveForward(SPEED_LINEAR);
             }
@@ -224,7 +249,8 @@ static void tick_retreat(const cam_data_t *cam, uint32_t now) {
         case SUB_RT_TURN90:
             turnLeft(SPEED_TURN);   // la cinta queda a la derecha
             setLED(120, 0, 120);
-            if ((int32_t)(now - g_sub_until) >= 0) enter_sub(SUB_RT_EDGE);
+            if ((int32_t)(now - g_sub_until) >= 0)
+                enter_timed(SUB_RT_EDGE, RETREAT_EDGE_TIMEOUT_MS);
             break;
 
         case SUB_RT_EDGE:
@@ -233,6 +259,11 @@ static void tick_retreat(const cam_data_t *cam, uint32_t now) {
                 motorStop();
                 enter_sub(SUB_RT_HOLD);
                 ESP_LOGI(TAG, "[RETREAT] esquina alcanzada");
+            } else if ((int32_t)(now - g_sub_until) >= 0) {
+                // Atasco: no se llego a la esquina a tiempo.
+                motorStop();
+                ESP_LOGW(TAG, "[RETREAT] timeout en EDGE — esquina no alcanzada");
+                enter_sub(SUB_RT_HOLD);
             } else if (cam->dist[2] == 2) { // pegado a la cinta derecha: corregir
                 turnLeft(SPEED_TURN);
             } else {
@@ -292,7 +323,15 @@ static void control_task(void *) {
             // Reanudar desde un subestado seguro
             if      (mode == MODE_FIND)   enter_sub(SUB_FD_SCAN);
             else if (mode == MODE_PATROL) enter_sub(SUB_PAT_RUN);
-            // RETREAT continua donde estaba (giros en el sitio son seguros)
+            else if (mode == MODE_RETREAT &&
+                     (g_sub == SUB_RT_DRIVE || g_sub == SUB_RT_EDGE)) {
+                // Avanzar a ciegas con datos viejos no es seguro: detener y
+                // reiniciar el timeout del subestado con el dato ya fresco.
+                motorStop();
+                if (g_sub == SUB_RT_DRIVE) enter_timed(SUB_RT_DRIVE, RETREAT_DRIVE_TIMEOUT_MS);
+                else                       enter_timed(SUB_RT_EDGE,  RETREAT_EDGE_TIMEOUT_MS);
+            }
+            // Los demas subestados de RETREAT (giros en el sitio) continuan donde estaban
         }
 
         // Override global de borde: nunca cruzar la cinta
