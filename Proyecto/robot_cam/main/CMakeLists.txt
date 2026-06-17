@@ -3,7 +3,7 @@ idf_component_register(
         "main.cc"
         "main_functions.cc"
         "model_settings.cc"
-        "person_detect_model_data.cc"
+        "identificador_model_data.cc"
         "image_provider.cc"
         "detection_responder.cc"
         "app_camera_esp.c"

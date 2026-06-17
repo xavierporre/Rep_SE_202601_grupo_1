@@ -10,7 +10,7 @@ WiFi con tres ordenes autonomas mas control manual:
 | **Patrullar** (`patrol`) | Recorre el perimetro siguiendo la cinta negra (cinta a la derecha, vuelta antihoraria) sin cruzarla. |
 | **Retirada** (`retreat`) | Gira ~180°, avanza hasta el borde de enfrente, gira ~90° y avanza junto al borde hasta detenerse en una **esquina** del ring. |
 
-Movimientos lineales al **100 %** de PWM; giros al **90 %**, siempre sobre el
+Movimientos lineales al **100 %** de PWM; giros al **80 %**, siempre sobre el
 eje (ruedas en sentidos opuestos).
 
 ## Arquitectura (dos placas)

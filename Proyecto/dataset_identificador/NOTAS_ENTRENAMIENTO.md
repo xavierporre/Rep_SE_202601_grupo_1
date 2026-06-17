@@ -63,9 +63,18 @@ Capturar 150-200 imágenes `label0` más variadas:
 
 ---
 
-## Si el intento 3 también falla
+## Intento 3 (2026-06-17) — **85.25% APROBADO** ✓
 
-Si el test accuracy sigue bajo ~70-75% después del fix arquitectónico, el problema es el dataset:
-- Capturar más fotos, especialmente a la **distancia real de combate** y con **fondos variados**.
-- Objetivo: ≥300 imágenes de cada clase con buena variedad de ángulo/distancia/iluminación.
-- Las fotos con sobreexposición, motion blur o labels incorrectas ya se limpiaron del set anterior, pero conviene seguir siendo estricto al capturar.
+**Dataset**: 811 imágenes (493 label0, 318 label1) → 689 train / 122 test  
+**Resultado**: **test accuracy 85.25%** (val_accuracy=0.8525 en época 80, todas las épocas completadas)  
+`TP=37 TN=67 FP=7 FN=11`
+
+- FP=7 (falsos positivos, bajo)
+- FN=11 (falsos negativos, aceptable para uso en combate — mejor perder alguna detección que generar falsas)
+- EarlyStopping no disparó — el modelo siguió mejorando hasta la época 80
+
+**Siguiente paso**: `python3 quantize_and_export.py` → copiar `.cc/.h` a `robot_cam/main/` → compilar y flashear.
+
+---
+
+
