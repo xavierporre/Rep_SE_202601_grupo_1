@@ -95,8 +95,8 @@ def make_model():
         layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
 
-        layers.Flatten(),
-        layers.Dropout(0.4),
+        layers.GlobalAveragePooling2D(),
+        layers.Dropout(0.5),
         layers.Dense(32, activation="relu", kernel_regularizer=l2),
         layers.Dense(2, activation="softmax"),
     ])
