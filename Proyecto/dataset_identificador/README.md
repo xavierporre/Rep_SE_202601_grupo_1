@@ -33,6 +33,30 @@ desplegar un modelo real en `robot_cam`.
   `identificador_model_data.cc/.h` listos para copiar a `robot_cam/main/`.
 - `modelo/` — se crea sola al entrenar/cuantizar (pesos, .h5, .tflite, .cc/.h).
 
+## Paso 0 (opcional) — Diagnóstico de sesgo de fondo
+
+Antes de capturar nuevas fotos, puedes confirmar visualmente si el modelo está
+mirando el objeto o el fondo con GradCAM:
+
+```bash
+python3 diagnostico_sesgo.py
+```
+
+Genera mapas de calor superpuestos sobre 8 imágenes `label0` y 8 `label1`
+aleatorias y los guarda en `modelo/gradcam/`. Colores:
+- **Rojo/amarillo** = zona de alta activación (lo que el modelo "mira")
+- **Azul** = zona ignorada
+
+Si el calor aparece en el fondo y no sobre el identificador, el sesgo queda
+confirmado y conviene priorizar la captura de nuevas `label1` con fondos
+variados (ver Paso 1).
+
+Requiere el modelo entrenado (`modelo/identificador_model.h5`) y `matplotlib`:
+
+```bash
+pip install matplotlib   # además de tensorflow pillow numpy
+```
+
 ## Paso 1 — Flashear y capturar fotos nuevas
 
 ```bash

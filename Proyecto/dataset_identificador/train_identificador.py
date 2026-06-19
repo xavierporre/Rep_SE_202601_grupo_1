@@ -122,15 +122,34 @@ def main():
 
     data_aug = tf.keras.Sequential([
         layers.RandomFlip("horizontal"),
-        layers.RandomRotation(0.04),
-        layers.RandomZoom(0.08),
+        layers.RandomRotation(0.15),                              # ±54° (antes 0.04)
+        layers.RandomZoom(0.20),                                  # ±20% (antes 0.08)
+        layers.RandomTranslation(0.10, 0.10),                     # ±10% desplazamiento
         layers.RandomBrightness(0.15, value_range=(0.0, 1.0)),
         layers.RandomContrast(0.15),
     ])
 
+    def apply_cutout(image, cutout_frac=0.25):
+        """Oculta un parche aleatorio para forzar invarianza de fondo."""
+        H = tf.shape(image)[0]
+        W = tf.shape(image)[1]
+        cut_h = tf.cast(tf.cast(H, tf.float32) * cutout_frac, tf.int32)
+        cut_w = tf.cast(tf.cast(W, tf.float32) * cutout_frac, tf.int32)
+        y0 = tf.random.uniform((), 0, H - cut_h + 1, dtype=tf.int32)
+        x0 = tf.random.uniform((), 0, W - cut_w + 1, dtype=tf.int32)
+        rows = tf.range(H)
+        cols = tf.range(W)
+        mask = tf.cast(
+            ~((rows >= y0)[:, None] & (rows < y0 + cut_h)[:, None] &
+              (cols >= x0)[None, :] & (cols < x0 + cut_w)[None, :]),
+            tf.float32
+        )[:, :, None]
+        return image * mask
+
     train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train))
     train_ds = train_ds.shuffle(len(X_train), seed=SEED).batch(16)
     train_ds = train_ds.map(lambda x, l: (data_aug(x, training=True), l))
+    train_ds = train_ds.map(lambda x, l: (tf.vectorized_map(apply_cutout, x), l))
     train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
 
     val_ds = tf.data.Dataset.from_tensor_slices((X_test, y_test)).batch(16)
