@@ -77,4 +77,57 @@ Capturar 150-200 imágenes `label0` más variadas:
 
 ---
 
+## Diagnóstico en campo (2026-06-19) — sesgo de orientación detectado
+
+Tras integrar el Intento 3 en el robot completo se observó:
+- El objeto tardaba **varios segundos** en detectarse aunque estuviera a 30 cm.
+- Rendimiento variable según posición y ángulo en el ring.
+
+Se desarrolló `diagnostico_sesgo.py` (GradCAM sobre la capa `conv2d_2`) para visualizar qué zonas activan el modelo.
+
+### Resultado del diagnóstico
+
+- El calor **cae sobre el objeto** en la mayoría de imágenes `label1` → **sesgo de fondo descartado**.
+- Sin embargo, el calor se concentra en **un único rasgo/zona del identificador** en casi todos los mapas. Solo las imágenes 00113, 00486, 00528 muestran calor disperso sobre el objeto completo.
+- **Causa raíz**: sesgo de orientación. Las 318 imágenes `label1` se capturaron casi todas desde el mismo ángulo/distancia. El modelo aprendió el rasgo más discriminativo en esa vista, no el objeto en general.
+
+### Cambios aplicados en `train_identificador.py`
+
+Aumentación reforzada para atacar el sesgo de orientación:
+
+```python
+# ANTES
+layers.RandomFlip("horizontal"),
+layers.RandomRotation(0.04),
+layers.RandomZoom(0.08),
+
+# DESPUÉS
+layers.RandomFlip("horizontal_and_vertical"),   # cubre vista desde arriba/abajo
+layers.RandomRotation(0.15),                    # ±54° (antes ±14.4°)
+layers.RandomZoom(0.20),                        # ±20% (antes ±8%)
+layers.RandomTranslation(0.10, 0.10),           # nuevo: desplazamiento ±10%
+# + apply_cutout(0.25) aplicado por imagen en el pipeline .map()
+```
+
+### Para el Intento 4
+
+Capturar **100–150 imágenes `label1` nuevas** variando ángulo y distancia en bloques:
+
+| Bloque | Descripción |
+|--------|-------------|
+| A | Vista frontal directa, ~20 cm |
+| B | Cámara inclinada ~30° desde arriba, ~20 cm |
+| C | Identificador girado ~45° en su eje vertical |
+| D | Identificador girado ~90° (cara lateral) |
+| E | Distancia ~40 cm, frontal |
+| F | Distancia ~15 cm, frontal |
+| G | Iluminación diferente (sombra lateral) |
+
+Las imágenes 00113, 00486, 00528 del dataset actual (calor disperso) son el modelo de captura a replicar.
+
+No hace falta añadir más `label0` (FP=7 es bajo, 493 imágenes son suficientes).
+
+**Verificación post-reentrenamiento**: correr `diagnostico_sesgo.py` y comprobar que el calor ya no se concentra en un único punto del objeto.
+
+---
 

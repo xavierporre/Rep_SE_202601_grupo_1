@@ -1,7 +1,7 @@
 {
     "version":            "1.3",
     "project_name":       "cam_capture",
-    "project_version":    "59b795a-dirty",
+    "project_version":    "9d9e5c21-dirty",
     "project_path":       "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Proyecto/dataset_identificador/cam_capture",
     "idf_path":           "/Users/xavierporre/esp/idf/esp-idf",
     "build_dir":          "/Users/xavierporre/Desktop/BNEX/Rep_SE_202601_grupo_1/Proyecto/dataset_identificador/cam_capture/build",

@@ -121,7 +121,7 @@ def main():
     model.summary()
 
     data_aug = tf.keras.Sequential([
-        layers.RandomFlip("horizontal"),
+        layers.RandomFlip("horizontal_and_vertical"),
         layers.RandomRotation(0.15),                              # ±54° (antes 0.04)
         layers.RandomZoom(0.20),                                  # ±20% (antes 0.08)
         layers.RandomTranslation(0.10, 0.10),                     # ±10% desplazamiento
