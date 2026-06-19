@@ -54,6 +54,7 @@ static const char *mode_name(robot_mode_t m) {
         case MODE_FIND:    return "find";
         case MODE_PATROL:  return "patrol";
         case MODE_RETREAT: return "retreat";
+        case MODE_AUDIO:   return "audio";
         default:           return "manual";
     }
 }
@@ -303,8 +304,8 @@ static void control_task(void *) {
             portEXIT_CRITICAL(&s_lock);
         }
 
-        // MANUAL: los handlers HTTP controlan los motores directamente
-        if (mode == MODE_MANUAL) continue;
+        // MANUAL/AUDIO: los motores los controlan otros handlers
+        if (mode == MODE_MANUAL || mode == MODE_AUDIO) continue;
 
         // Parada de seguridad: sin datos frescos de la camara
         if (!g_link_ok) {

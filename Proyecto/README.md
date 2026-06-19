@@ -83,6 +83,71 @@ motores y parpadea rojo hasta recuperar el enlace.
 | Rojo fijo | Retroceso por borde |
 | Rojo parpadeante | Enlace con la CAM perdido (motores detenidos) |
 
+## Control por audio (MODE_AUDIO)
+
+Modo adicional que usa el mismo algoritmo de detección de frecuencias del
+Lab_1/Ejercicio_3 (muestreo ADC → DFT simple) para controlar la dirección del
+robot en lugar de encender LEDs.
+
+### Hardware requerido
+
+Conectar el módulo **MAX9814** (micrófono con AGC y salida analógica) a
+**GPIO1 del ESP32-S3** (ADC1_CH0, 12 bits, atenuación 12 dB).
+
+Pines del MAX9814:
+
+| MAX9814 | ESP32-S3 |
+|---------|----------|
+| VDD | 3.3 V |
+| GND | GND |
+| OUT | GPIO1 |
+| GAIN | sin conectar (ganancia 40 dB por defecto) |
+
+### Activación
+
+Desde la interfaz web o via HTTP:
+
+```
+GET http://192.168.4.1/mode?set=audio
+```
+
+El botón **🎤 Audio** aparece en la fila de modos junto a MANUAL/FIND/PATROL/RETREAT.
+El LED WS2812 se pone **naranja** mientras se detecta una frecuencia válida.
+
+### Mapeo de frecuencias → dirección
+
+| Banda | Rango | Dirección | PWM |
+|-------|-------|-----------|-----|
+| 0 | 150–450 Hz | Adelante | `SPEED_LINEAR` (100 %) |
+| 1 | 550–750 Hz | Izquierda (giro eje) | `SPEED_TURN` (80 %) |
+| 2 | 850–1000 Hz | Derecha (giro eje) | `SPEED_TURN` (80 %) |
+| 3 | 1050–1300 Hz | Atrás | `SPEED_LINEAR` (100 %) |
+| — | sin banda | Stop (tras 700 ms) | 0 |
+
+Los gaps entre bandas (450–550 Hz, 750–850 Hz, 1000–1050 Hz) se ignoran para
+evitar transiciones por ruido.
+
+### Parámetros calibrables (`audio_ctrl.c`)
+
+| Constante | Valor | Descripción |
+|-----------|-------|-------------|
+| `AUDIO_SAMPLES` | 256 | Muestras por ventana DFT |
+| `AUDIO_FS` | 8000 Hz | Frecuencia de muestreo |
+| `AUDIO_HOLD_MS` | 700 ms | Histéresis: mantiene el último comando si no llega señal |
+| `MIC_CHANNEL` | `ADC_CHANNEL_0` | Canal ADC (GPIO1); cambiar si se usa otro pin |
+
+### Notas de implementación
+
+- La tarea `audio_ctrl` corre en FreeRTOS a prioridad 5 (debajo del lazo de
+  control en 10), stack 8 KB.
+- El lazo de control (`control_task`) omite el ciclo cuando el modo es AUDIO,
+  igual que en MANUAL, para no interferir con los motores.
+- El modo no usa datos de la CAM: si se activa AUDIO no importa que el enlace
+  UART esté caído (no dispara la parada de seguridad).
+- La DFT es O(N²): a 256 muestras y 8 kHz tarda ~32 ms de muestreo + ~15 ms de
+  cómputo en el S3 → latencia total ≈ 50 ms por detección, suficiente para
+  control interactivo.
+
 ## Compilar y flashear
 
 Requiere ESP-IDF (instalado en `%USERPROFILE%\esp\idf\esp-idf`). El componente

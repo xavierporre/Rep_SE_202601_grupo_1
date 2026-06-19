@@ -33,6 +33,7 @@
 #include "robot_state.h"
 #include "uart_link.h"
 #include "control.h"
+#include "audio_ctrl.h"
 
 static const char* TAG = "RobotRing";
 
@@ -140,6 +141,7 @@ const char INDEX_HTML[] = R"rawhtml(
     <button class="mode-btn" data-mode="find"    onclick="setMode('find')">&#127919; Buscar y destruir</button>
     <button class="mode-btn" data-mode="patrol"  onclick="setMode('patrol')">&#128737; Patrullar</button>
     <button class="mode-btn" data-mode="retreat" onclick="setMode('retreat')">&#127937; Retirada</button>
+    <button class="mode-btn" data-mode="audio"   onclick="setMode('audio')">&#127908; Audio</button>
   </div>
   <div class="dpad">
     <div class="de"></div>
@@ -313,6 +315,7 @@ static esp_err_t hMode(httpd_req_t *req) {
   if      (strcmp(val, "find")    == 0) m = MODE_FIND;
   else if (strcmp(val, "patrol")  == 0) m = MODE_PATROL;
   else if (strcmp(val, "retreat") == 0) m = MODE_RETREAT;
+  else if (strcmp(val, "audio")   == 0) m = MODE_AUDIO;
   else if (strcmp(val, "manual")  == 0) m = MODE_MANUAL;
   else {
     cors(req);
@@ -324,6 +327,7 @@ static esp_err_t hMode(httpd_req_t *req) {
 
   control_set_mode(m);
   if (m == MODE_MANUAL) setLED(0, 0, 40);
+  if (m == MODE_AUDIO)  setLED(180, 80, 0);
 
   cors(req);
   httpd_resp_set_type(req, "text/plain");
@@ -568,4 +572,5 @@ extern "C" void app_main() {
   // ── Enlace con la camara + maquina de estados ─────────
   uart_link_init();
   control_start();
+  audio_ctrl_start();
 }

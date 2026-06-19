@@ -39,6 +39,7 @@ typedef enum {
     MODE_FIND,         // buscar y destruir: escanear → cargar al identificador
     MODE_PATROL,       // patrullar el perimetro siguiendo la cinta (CCW)
     MODE_RETREAT,      // retirada: ir a una esquina del ring y mantenerse
+    MODE_AUDIO,        // control por frecuencia de audio (microfono en GPIO1)
 } robot_mode_t;
 
 // Ultimo dato recibido de la camara por UART
@@ -50,12 +51,18 @@ typedef struct {
 } cam_data_t;
 
 // ── Motores y LED (implementados en web.cpp, pines L298N del template) ─
+#ifdef __cplusplus
+extern "C" {
+#endif
 void setPWM(int spd100);
-void motorStop();
+void motorStop(void);
 void moveForward(int s);
 void moveBackward(int s);
 void turnLeft(int s);     // giro sobre el eje: A atras, B adelante
 void turnRight(int s);    // giro sobre el eje: A adelante, B atras
 void setLED(uint8_t r, uint8_t g, uint8_t b);
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // ROBOT_S3_ROBOT_STATE_H_

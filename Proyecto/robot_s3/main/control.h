@@ -10,6 +10,10 @@
 #include <stddef.h>
 #include "robot_state.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Lanza la tarea del lazo de control (20 Hz)
 void control_start(void);
 
@@ -20,5 +24,9 @@ robot_mode_t control_get_mode(void);
 
 // Escribe el estado actual como JSON en buf; devuelve los bytes escritos
 int control_status_json(char *buf, size_t n);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // ROBOT_S3_CONTROL_H_
