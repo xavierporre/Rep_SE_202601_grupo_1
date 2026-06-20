@@ -131,3 +131,44 @@ No hace falta añadir más `label0` (FP=7 es bajo, 493 imágenes son suficientes
 
 ---
 
+## Intento 4 (2026-06-20) — **86.49% APROBADO** ✓
+
+**Dataset**: 977 imágenes (569 label0, 408 label1) → 829 train / 148 test  
+**Resultado**: **test accuracy 86.49%** (val_accuracy=0.8649 en época 46, EarlyStopping en época 76)  
+`TP=58 TN=70 FP=16 FN=4`
+
+- FP=16 (falsos positivos, aceptable para combate)
+- FN=4 (falsos negativos, muy bajo — el modelo casi nunca pierde el identificador)
+- El modelo llegó a 86.49% antes de la primera reducción de LR (época 58), lo que indica que LR=5e-4 con epochs=160 es la configuración correcta
+
+### Configuración final
+
+```python
+learning_rate = 5e-4
+epochs = 160
+data_aug = tf.keras.Sequential([
+    layers.RandomFlip("horizontal"),
+    layers.RandomRotation(0.04),     # ±14.4°
+    layers.RandomZoom(0.08),         # ±8%
+    layers.RandomBrightness(0.10, value_range=(0.0, 1.0)),
+    layers.RandomContrast(0.10),
+])
+callbacks = [
+    EarlyStopping(monitor="val_accuracy", patience=30),
+    ModelCheckpoint(monitor="val_accuracy"),
+    ReduceLROnPlateau(monitor="val_accuracy", factor=0.5, patience=12),
+]
+```
+
+### Lecciones del camino Intento 3 → Intento 4
+
+1. Añadir 90 label1 diversas SIN añadir label0 correspondiente: FP sube de 7 a 27
+2. Añadir label0 de condiciones similares a las nuevas label1: FP baja gradualmente (27→24→21→16)
+3. LR=2e-4 no funciona — el modelo queda en mínimos locales conservadores
+4. LR=5e-4 + epochs=160 permite al modelo explorar y encontrar la solución
+5. `val_loss` monitoring selecciona checkpoints conservadores (alto FN) — usar siempre `val_accuracy`
+
+**Siguiente paso**: `python3 quantize_and_export.py` → copiar `.cc/.h` a `robot_cam/main/` → compilar y flashear.
+
+---
+

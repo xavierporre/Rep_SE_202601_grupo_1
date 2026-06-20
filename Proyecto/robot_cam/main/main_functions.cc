@@ -21,7 +21,7 @@ limitations under the License.
 #include "identificador_model_data.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/micro_log.h"
-#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
+#include "tensorflow/lite/micro/all_ops_resolver.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 
 #include "freertos/FreeRTOS.h"
@@ -78,22 +78,10 @@ void setup() {
     return;
   }
 
-  // Pull in only the operation implementations we need.
-  // This relies on a complete list of all the ops needed by this graph.
-  // An easier approach is to just use the AllOpsResolver, but this will
-  // incur some penalty in code space for op implementations that are not
-  // needed by this graph.
-  //
-  // tflite::AllOpsResolver resolver;
+  // AllOpsResolver registra todos los ops y versiones — evita incompatibilidades
+  // entre la versión de TFLite usada para cuantizar y TFLite Micro de ESP-IDF.
   // NOLINTNEXTLINE(runtime-global-variables)
-  static tflite::MicroMutableOpResolver<7> micro_op_resolver;
-  micro_op_resolver.AddConv2D();
-  micro_op_resolver.AddMul();
-  micro_op_resolver.AddAdd();
-  micro_op_resolver.AddMaxPool2D();
-  micro_op_resolver.AddMean();
-  micro_op_resolver.AddFullyConnected();
-  micro_op_resolver.AddSoftmax();
+  static tflite::AllOpsResolver micro_op_resolver;
 
   // Build an interpreter to run the model with.
   // NOLINTNEXTLINE(runtime-global-variables)
@@ -127,6 +115,8 @@ void setup() {
 
 #ifndef CLI_ONLY_INFERENCE
 void loop() {
+  if (input == nullptr) return;  // setup() falló — evita crash por puntero null
+
   // Get image from provider.
   if (kTfLiteOk != GetImage(kNumCols, kNumRows, kNumChannels, input->data.int8)) {
     MicroPrintf("Image capture failed.");
