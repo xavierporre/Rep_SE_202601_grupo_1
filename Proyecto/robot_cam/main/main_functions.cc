@@ -21,7 +21,7 @@ limitations under the License.
 #include "identificador_model_data.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/micro_log.h"
-#include "tensorflow/lite/micro/all_ops_resolver.h"
+#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 
 #include "freertos/FreeRTOS.h"
@@ -35,7 +35,7 @@ limitations under the License.
 // Ejecutar la inferencia cada N frames capturados. El analisis de borde
 // (grilla 3x2) corre en TODOS los frames (~1 ms); la inferencia es lenta
 // (cientos de ms). Subir a 2-3 si el borde reacciona lento en el ring.
-#define INFERENCE_EVERY_N 1
+#define INFERENCE_EVERY_N 5
 
 namespace {
 const tflite::Model* model = nullptr;
@@ -78,10 +78,19 @@ void setup() {
     return;
   }
 
-  // AllOpsResolver registra todos los ops y versiones — evita incompatibilidades
-  // entre la versión de TFLite usada para cuantizar y TFLite Micro de ESP-IDF.
+  // Ops usados por el modelo: Conv2D+ReLU, BatchNorm(Mul+Add), MaxPool,
+  // Mean(GlobalAvgPool), FullyConnected, Softmax, Reshape
   // NOLINTNEXTLINE(runtime-global-variables)
-  static tflite::AllOpsResolver micro_op_resolver;
+  static tflite::MicroMutableOpResolver<9> micro_op_resolver;
+  micro_op_resolver.AddConv2D();
+  micro_op_resolver.AddMaxPool2D();
+  micro_op_resolver.AddMean();
+  micro_op_resolver.AddFullyConnected();
+  micro_op_resolver.AddSoftmax();
+  micro_op_resolver.AddRelu();
+  micro_op_resolver.AddMul();
+  micro_op_resolver.AddAdd();
+  micro_op_resolver.AddReshape();
 
   // Build an interpreter to run the model with.
   // NOLINTNEXTLINE(runtime-global-variables)
@@ -131,7 +140,8 @@ void loop() {
   static float s_no_person_score_f = 1.0f;
   static int   s_frame_count       = 0;
 
-  if ((s_frame_count++ % INFERENCE_EVERY_N) == 0) {
+  bool ran_inference = ((s_frame_count++ % INFERENCE_EVERY_N) == 0);
+  if (ran_inference) {
     int64_t t0 = esp_timer_get_time();
 
     // Run the model on this input and make sure it succeeds.
@@ -157,8 +167,9 @@ void loop() {
     }
   }
 
-  // Respond to detection
-  RespondToDetection(s_person_score_f, s_no_person_score_f);
+  // Respond to detection: pasa new_inference=true solo cuando Invoke() corrió.
+  // En fast frames, solo se ejecuta el análisis de borde sin cambiar EMA.
+  RespondToDetection(s_person_score_f, s_no_person_score_f, ran_inference);
   vTaskDelay(1); // to avoid watchdog trigger
 }
 #endif // CLI_ONLY_INFERENCE

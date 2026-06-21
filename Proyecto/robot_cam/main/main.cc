@@ -34,7 +34,7 @@ static void tf_main(void *) {
 
     ESP_LOGI(TAG, "Inicializando modelo TFLite y camara OV2640...");
     setup();
-    ESP_LOGI(TAG, "Bucle camara: borde (grilla 3x2) + identificador (umbral >= 75%%)");
+    ESP_LOGI(TAG, "Bucle camara: borde (grilla 3x2) + identificador (umbral >= 50%%, EMA=0.60, cada 5 frames)");
     while (true) {
         loop();
     }

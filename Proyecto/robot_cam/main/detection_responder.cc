@@ -29,7 +29,7 @@
 // Suavizado del score (EMA): reduce falsos negativos por ruido frame a frame.
 // Alpha bajo = mas memoria (no perder el identificador por una caida puntual
 // del score); ajustar segun la Hz de inferencia real medida en campo (Fase 0).
-#define IDENT_EMA_ALPHA    0.18f
+#define IDENT_EMA_ALPHA    0.60f
 // Histeresis: frames consecutivos de score bajo el umbral antes de soltar el
 // identificador. La subida no necesita histeresis (reaccionar rapido al
 // aparecer el objetivo); solo la perdida se confirma para evitar que un
@@ -132,7 +132,8 @@ static void analyze_grid(uint8_t grid[2][3], int8_t dist[3], char *action_out) {
     snprintf(action_out, 16, "%s", s_confirmed);
 }
 
-void RespondToDetection(float person_score, float no_person_score) {
+void RespondToDetection(float person_score, float no_person_score,
+                        bool new_inference) {
     // DIAGNOSTICO TEMPORAL (Fase 0): Hz real de inferencia. Quitar al terminar.
     {
         static int64_t s_last_us = 0;
@@ -157,31 +158,33 @@ void RespondToDetection(float person_score, float no_person_score) {
 
     analyze_grid(grid, dist, action);
 
-    // EMA del score: evita que un solo frame ruidoso por debajo del umbral
-    // tire abajo el identificador (antes se evaluaba el score crudo).
-    static float s_score_ema = 0.0f;
-    s_score_ema += IDENT_EMA_ALPHA * (person_score - s_score_ema);
+    // EMA del score y histeresis de perdida: solo se actualizan en frames
+    // donde hubo una inferencia real. En fast frames (new_inference=false)
+    // el score es identico al de la ultima inferencia — actualizarlo seria
+    // equivalente a subir la tasa de muestreo artificialmente y consumiria
+    // el IDENT_LOST_CONFIRM_N en milisegundos en lugar de ciclos de inferencia.
+    static float   s_score_ema       = 0.0f;
+    static bool    s_ident_confirmed = false;
+    static uint8_t s_lost_count      = 0;
+
+    if (new_inference) {
+        s_score_ema += IDENT_EMA_ALPHA * (person_score - s_score_ema);
+        bool above = (s_score_ema >= IDENT_THRESHOLD);
+        if (above) {
+            s_ident_confirmed = true;
+            s_lost_count      = 0;
+        } else if (s_ident_confirmed) {
+            if (++s_lost_count >= IDENT_LOST_CONFIRM_N) {
+                s_ident_confirmed = false;
+                s_lost_count      = 0;
+            }
+        }
+    }
 
     int conf = (int)(s_score_ema * 100 + 0.5f);
     if (conf < 0)   conf = 0;
     if (conf > 100) conf = 100;
 
-    // Histeresis de perdida: el identificador solo se suelta tras
-    // IDENT_LOST_CONFIRM_N frames consecutivos bajo el umbral, para no
-    // perderlo "casi de inmediato" por un solo frame ruidoso. La subida es
-    // inmediata (sin retraso al aparecer el objetivo).
-    static bool    s_ident_confirmed = false;
-    static uint8_t s_lost_count      = 0;
-    bool above = (s_score_ema >= IDENT_THRESHOLD);
-    if (above) {
-        s_ident_confirmed = true;
-        s_lost_count      = 0;
-    } else if (s_ident_confirmed) {
-        if (++s_lost_count >= IDENT_LOST_CONFIRM_N) {
-            s_ident_confirmed = false;
-            s_lost_count      = 0;
-        }
-    }
     bool ident = s_ident_confirmed;
 
     gpio_set_level(LED_FLASH_GPIO, ident ? 1 : 0);

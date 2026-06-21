@@ -12,7 +12,10 @@
 
 // Procesa el resultado de la ultima inferencia (scores en [0,1]) junto con el
 // analisis de borde del ultimo frame, y publica todo por UART.
-void RespondToDetection(float person_score, float no_person_score);
+// new_inference=true solo en los frames donde Invoke() acaba de correr;
+// en fast frames solo se ejecuta el analisis de borde, sin actualizar EMA.
+void RespondToDetection(float person_score, float no_person_score,
+                        bool new_inference = false);
 
 // Almacena el ultimo frame int8 96x96 para el analisis de borde
 void SetLastImage(const int8_t *img);
