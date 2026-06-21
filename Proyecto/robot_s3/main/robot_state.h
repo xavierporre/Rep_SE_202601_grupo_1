@@ -27,6 +27,8 @@
 #define RETREAT_EDGE_TIMEOUT_MS   6000  // tope para llegar a la esquina siguiendo el borde en RETREAT
 #define PATROL_TURN_MS   200   // tramo de giro del arco de busqueda (patrulla)
 #define PATROL_FWD_MS    350   // tramo recto del arco de busqueda (patrulla)
+#define FIND_LOOK_MS    2500   // tiempo parado buscando el identificador (~1 inferencia)
+#define FIND_TURN_MS     600   // giro breve entre miradas (~1/4 vuelta)
 #define PATROL_NUDGE_PERIOD_TICKS 4  // cada cuantos ticks (50 ms) corregir hacia la cinta lejana
 
 // ── Identificador (modelo embutido en la CAM) ──────────────────────────

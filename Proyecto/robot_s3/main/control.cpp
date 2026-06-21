@@ -15,7 +15,8 @@ static const char *TAG = "control";
 typedef enum {
     SUB_NONE = 0,
     // FIND (buscar y destruir)
-    SUB_FD_SCAN,        // girar sobre el eje buscando el identificador
+    SUB_FD_SCAN,        // giro breve entre miradas (temporizado)
+    SUB_FD_LOOK,        // parado mirando el identificador (temporizado)
     SUB_FD_CHARGE,      // cargar de frente al identificador (100%)
     SUB_FD_AVOID,       // retroceso tras tocar el borde
     // PATROL
@@ -34,6 +35,7 @@ typedef enum {
 static const char *sub_name(sub_state_t s) {
     switch (s) {
         case SUB_FD_SCAN:         return "scan";
+        case SUB_FD_LOOK:         return "look";
         case SUB_FD_CHARGE:       return "charge";
         case SUB_FD_AVOID:        return "avoid";
         case SUB_PAT_RUN:         return "track";
@@ -89,7 +91,7 @@ void control_set_mode(robot_mode_t m) {
     portENTER_CRITICAL(&s_lock);
     g_mode = m;
     switch (m) {
-        case MODE_FIND:    enter_sub(SUB_FD_SCAN);                  break;
+        case MODE_FIND:    enter_timed(SUB_FD_LOOK, FIND_LOOK_MS);   break;
         case MODE_PATROL:  enter_sub(SUB_PAT_RUN);                  break;
         case MODE_RETREAT: enter_timed(SUB_RT_TURN180, TURN_180_MS); break;
         default:           enter_sub(SUB_NONE);                     break;
@@ -108,7 +110,9 @@ robot_mode_t control_get_mode(void) {
 
 // ── Comportamiento FIND: escanear → cargar → esquivar borde ────────────
 static void tick_find(const cam_data_t *cam, uint32_t now, bool border_near) {
-    if (border_near && g_sub != SUB_FD_AVOID) {
+    // LOOK: robot quieto → no puede caerse, AVOID innecesario.
+    // CHARGE: los nudges laterales dentro del case ya manejan bordes; no interrumpir la carga.
+    if (border_near && g_sub != SUB_FD_AVOID && g_sub != SUB_FD_LOOK && g_sub != SUB_FD_CHARGE) {
         enter_timed(SUB_FD_AVOID, AVOID_TURN_MS);
     }
 
@@ -120,7 +124,7 @@ static void tick_find(const cam_data_t *cam, uint32_t now, bool border_near) {
             setLED(180, 0, 0);
             bool min_elapsed = (int32_t)(now - (g_sub_until - (AVOID_TURN_MS - AVOID_TURN_MIN_MS))) >= 0;
             bool timed_out   = (int32_t)(now - g_sub_until) >= 0;
-            if (timed_out || (min_elapsed && !border_near)) enter_sub(SUB_FD_SCAN);
+            if (timed_out || (min_elapsed && !border_near)) enter_timed(SUB_FD_LOOK, FIND_LOOK_MS);
             break;
         }
 
@@ -131,14 +135,30 @@ static void tick_find(const cam_data_t *cam, uint32_t now, bool border_near) {
                 g_last_ident_ms = now;
                 enter_sub(SUB_FD_CHARGE);
                 ESP_LOGI(TAG, "[FIND] identificador conf=%d%% → CARGA", cam->conf);
+                break;
             }
+            if ((int32_t)(now - g_sub_until) >= 0)
+                enter_timed(SUB_FD_LOOK, FIND_LOOK_MS);
+            break;
+
+        case SUB_FD_LOOK:
+            motorStop();
+            setLED(0, 0, 200);   // azul: mirando quieto
+            if (cam->conf >= IDENT_CONF_THR) {
+                g_last_ident_ms = now;
+                enter_sub(SUB_FD_CHARGE);
+                ESP_LOGI(TAG, "[FIND] identificador conf=%d%% → CARGA", cam->conf);
+                break;
+            }
+            if ((int32_t)(now - g_sub_until) >= 0)
+                enter_timed(SUB_FD_SCAN, FIND_TURN_MS);
             break;
 
         case SUB_FD_CHARGE:
             if (cam->conf >= IDENT_CONF_THR) g_last_ident_ms = now;
             if (now - g_last_ident_ms > IDENT_LOST_MS) {
-                ESP_LOGI(TAG, "[FIND] identificador perdido → ESCANEO");
-                enter_sub(SUB_FD_SCAN);
+                ESP_LOGI(TAG, "[FIND] identificador perdido → MIRAR");
+                enter_timed(SUB_FD_LOOK, FIND_LOOK_MS);
                 break;
             }
             // Empujones laterales si un borde lateral queda cerca durante la carga
@@ -149,7 +169,7 @@ static void tick_find(const cam_data_t *cam, uint32_t now, bool border_near) {
             break;
 
         default:
-            enter_sub(SUB_FD_SCAN);
+            enter_timed(SUB_FD_LOOK, FIND_LOOK_MS);
             break;
     }
 }
