@@ -161,10 +161,7 @@ static void tick_find(const cam_data_t *cam, uint32_t now, bool border_near) {
                 enter_timed(SUB_FD_LOOK, FIND_LOOK_MS);
                 break;
             }
-            // Empujones laterales si un borde lateral queda cerca durante la carga
-            if      (cam->dist[0] == 2) turnRight(SPEED_TURN);
-            else if (cam->dist[2] == 2) turnLeft(SPEED_TURN);
-            else                        moveForward(SPEED_LINEAR);
+            moveForward(SPEED_LINEAR);
             setLED(0, 255, 0);
             break;
 
