@@ -25,11 +25,15 @@
 #define TURN_90_MS       600   // giro ~90° a SPEED_TURN  — CALIBRAR en el robot
 #define RETREAT_DRIVE_TIMEOUT_MS  6000  // tope para encontrar el borde de enfrente en RETREAT (atasco)
 #define RETREAT_EDGE_TIMEOUT_MS   6000  // tope para llegar a la esquina siguiendo el borde en RETREAT
+#define RETREAT_MIN_DRIVE_MS       600  // avance minimo en DRIVE antes de aceptar el borde objetivo (despegarse del borde)
+#define RETREAT_EDGE_STREAK          3  // frames consecutivos con borde antes de darlo por valido (anti-rebote)
 #define PATROL_TURN_MS   200   // tramo de giro del arco de busqueda (patrulla)
 #define PATROL_FWD_MS    350   // tramo recto del arco de busqueda (patrulla)
 #define FIND_LOOK_MS    2500   // tiempo parado buscando el identificador (~1 inferencia)
 #define FIND_TURN_MS     600   // giro breve entre miradas (~1/4 vuelta)
 #define PATROL_NUDGE_PERIOD_TICKS 4  // cada cuantos ticks (50 ms) corregir hacia la cinta lejana
+#define PATROL_STEER_PERIOD       3  // ventana de ticks del avance-con-pulsos en SUB_PAT_RUN
+#define PATROL_STEER_TURN         2  // ticks de la ventana dedicados a girar (el resto avanza)
 
 // ── Identificador (modelo embutido en la CAM) ──────────────────────────
 #define IDENT_CONF_THR    50   // confianza minima (%) para iniciar la carga

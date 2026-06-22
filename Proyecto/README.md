@@ -160,12 +160,12 @@ git submodule update --init Lab_3/esp-tflite-micro
 Luego, desde un terminal con el entorno de IDF exportado (`export.bat`):
 
 ```bat
-cd Proyecto\robot_s3
+cd Proyecto/robot_s3
 idf.py set-target esp32s3
 idf.py build
 idf.py -p <PUERTO_S3> flash monitor
 
-cd ..\robot_cam
+cd ../robot_cam
 idf.py set-target esp32
 idf.py build
 idf.py -p <PUERTO_FTDI> flash monitor
