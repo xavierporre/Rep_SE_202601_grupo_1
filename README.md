@@ -114,23 +114,6 @@ Los movimientos se implementan como combinaciones de IN1–IN4 + PWM en las func
 ([web.cpp](Proyecto/robot_s3/main/web.cpp)). Los giros son **sobre el eje** (ruedas en
 sentidos opuestos).
 
-### Por completar (no documentado en el repositorio)
-
-Los siguientes datos mecánicos/eléctricos no están en el código y deben completarse
-con la build real del robot:
-
-| Aspecto | Estado |
-|---|---|
-| Modelo / torque de los motores y reductora | _Por completar_ |
-| Diámetro de ruedas y distancia entre ejes | _Por completar_ |
-| Tipo, voltaje y capacidad de la batería | _Por completar_ |
-| Material y dimensiones del chasis | _Por completar_ |
-| Fotos del robot ensamblado / esquemáticos | _Por completar_ |
-
-> Nota de alimentación: con los motores al 100 % en bloqueo, la corriente puede
-> hundir la línea de 5 V y reiniciar la ESP32-CAM (brownout). Se recomienda un
-> condensador o regulador de 5 V dedicado.
-
 ---
 
 ## Modelo de IA para detección del identificador
